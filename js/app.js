@@ -6,11 +6,28 @@
 
   // tema
   const root = document.documentElement;
-  try { root.dataset.theme = localStorage.getItem("dm.theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); } catch {}
-  $("theme").onclick = () => {
-    root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
-    try { localStorage.setItem("dm.theme", root.dataset.theme); } catch {}
+  const THEMES = [["white", "BRANCO"], ["black", "PRETO"], ["paper", "BEGE"]];
+  const setTheme = (t) => {
+    if (!THEMES.some(x => x[0] === t)) t = "white";
+    root.dataset.theme = t;
+    $("theme").textContent = "TEMA: " + THEMES.find(x => x[0] === t)[1];
+    try { localStorage.setItem("dm.theme", t); } catch {}
   };
+  let saved = "white";
+  try { saved = localStorage.getItem("dm.theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "black" : "white"); } catch {}
+  setTheme(saved);
+  $("theme").onclick = () => {
+    const i = THEMES.findIndex(x => x[0] === root.dataset.theme);
+    setTheme(THEMES[(i + 1) % THEMES.length][0]);
+  };
+
+  // barra lateral (visão geral)
+  $("side-body").innerHTML = `<h4>Visão<br>geral</h4>
+    <span class="lbl">Alvo</span><p>${esc(C.bio[0] || "")}</p>
+    <span class="lbl">Perfil</span>
+    <div class="row"><b>BR</b><div>${esc(C.name)}<br><span>${esc(C.title)}</span></div></div>
+    <span class="lbl">Contato</span>
+    ${C.links.map(l => `<div class="row"><b>→</b><a href="${esc(l.href)}">${esc(l.label)}</a></div>`).join("")}`;
   $("year").textContent = new Date().getFullYear();
   $("foot-links").innerHTML = C.links.map(l => `<a href="${esc(l.href)}">${esc(l.label)}</a>`).join("");
 
@@ -23,10 +40,15 @@
       const item = (d) => `<li><span class="date">${fmt(d.updated_at)}</span><a href="#/post/${d.id}">${esc(d.title)}</a></li>`;
       return `
       <section class="hero">
-        ${C.photo ? `<img src="${esc(C.photo)}" alt="${esc(C.name)}">` : `<div class="avatar">${esc(initials)}</div>`}
-        <div class="txt"><h1 style="margin-top:0">${esc(C.name)}</h1><div class="mut">${esc(C.title)}</div>
-        ${C.bio.map(p => `<p>${esc(p)}</p>`).join("")}<div class="links">${links()}</div></div>
+        <div class="txt"><span class="kicker">Tópico</span><h1>${esc(C.name)}</h1><div class="mut">${esc(C.title)}</div>
+        ${C.bio.map(p => `<p class="mut" style="max-width:560px">${esc(p)}</p>`).join("")}<div class="links">${links()}</div></div>
+        ${C.photo ? `<img class="photo" src="${esc(C.photo)}" alt="${esc(C.name)}">` : `<div class="avatar">${esc(initials)}</div>`}
       </section>
+      <div class="stats">
+        <div class="stat"><span class="lbl">Artigos</span><div class="num">${String(arts.length).padStart(2, "0")}</div></div>
+        <div class="stat"><span class="lbl">Notícias</span><div class="num">${String(news.length).padStart(2, "0")}</div></div>
+        <div class="stat"><span class="lbl">Desde</span><div class="num">${new Date().getFullYear()}</div></div>
+      </div>
       <h2 id="noticias">Notícias</h2>
       <ul class="list">${news.slice(0, 5).map(item).join("") || '<li class="mut">Sem notícias ainda.</li>'}</ul>
       <p><a href="#/noticias">Ver todas →</a></p>
@@ -35,14 +57,14 @@
       <p><a href="#/artigos">Ver todos →</a></p>`;
     },
     async sobre() {
-      return `<h1>Sobre mim</h1>${C.about.map(p => `<p>${esc(p)}</p>`).join("")}<div class="links">${links()}</div>`;
+      return `<span class="kicker">Perfil</span><h1>Sobre mim</h1>${C.about.map(p => `<p class="lead">${esc(p)}</p>`).join("")}<div class="links">${links()}</div>`;
     },
     async noticias() { return listPage("noticia", "Notícias"); },
     async artigos() { return listPage("artigo", "Artigos"); },
     async curriculo() {
       const sec = (t, arr) => `<h2>${t}</h2>` + arr.map(x => `<div class="tl-item"><span class="mut">${esc(x.when)}</span><br>
         <b>${esc(x.role)}</b> — ${esc(x.org)}${x.place ? ", " + esc(x.place) : ""}${x.desc ? `<br>${esc(x.desc)}` : ""}</div>`).join("");
-      return `<h1>Currículo</h1>
+      return `<span class="kicker">Registro</span><h1>Currículo</h1>
         ${C.cv.pdf ? `<p><a class="btn" href="${esc(C.cv.pdf)}" target="_blank" rel="noopener">Baixar PDF</a></p>` : ""}
         ${sec("Experiência", C.cv.experience)}${sec("Formação", C.cv.education)}
         <h2>Habilidades</h2><p>${C.cv.skills.map(s => `<span class="tag">${esc(s)}</span>`).join(" ")}</p>`;
@@ -52,7 +74,7 @@
       if (!d || (!d.published && !Store.isAuthed())) return "<h1>Não encontrado</h1>";
       return `<article class="post"><span class="tag">${d.kind === "noticia" ? "Notícia" : "Artigo"}</span>
         <h1>${esc(d.title)}</h1><div class="mut">${fmt(d.updated_at)}${d.published ? "" : " · rascunho"}</div>
-        <div>${DOMPurify.sanitize(d.html)}</div>
+        <div class="body">${DOMPurify.sanitize(d.html)}</div>
         ${Store.isAuthed() ? `<p><a href="#/editor/${d.id}">Editar</a></p>` : ""}</article>`;
     },
     async login() {
@@ -71,7 +93,7 @@
 
   async function listPage(kind, label) {
     const docs = await Store.list(kind);
-    return `<h1>${label}</h1><ul class="list">${docs.map(d =>
+    return `<span class="kicker">Seção</span><h1>${label}</h1><ul class="list">${docs.map(d =>
       `<li><span class="date">${fmt(d.updated_at)}</span><h3><a href="#/post/${d.id}">${esc(d.title)}</a></h3></li>`).join("")
       || `<li class="mut">Nada publicado ainda.</li>`}</ul>`;
   }
@@ -81,7 +103,9 @@
     const [, name = "home", arg] = location.hash.replace(/^#/, "").split("/");
     const key = pages[name] ? name : "home";
     document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#/" + key));
-    view.className = key === "editor" ? "" : "wrap";
+    view.className = key === "editor" ? "page ed" : "page";
+    document.getElementById("side").hidden = key === "editor";
+    document.querySelector(".shell").style.gridTemplateColumns = key === "editor" ? "1fr" : "";
     try {
       view.innerHTML = await pages[key](arg);
     } catch (e) { view.innerHTML = `<h1>Erro</h1><p class="err">${esc(e.message || e)}</p>`; }
