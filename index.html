@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Davi Menegazzi</title>
+<meta name="description" content="Portfólio, notícias e artigos de Davi Menegazzi.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#/">Davi Menegazzi</a>
+  <nav id="nav">
+    <a href="#/sobre">Sobre mim</a>
+    <a href="#/noticias">Notícias</a>
+    <a href="#/artigos">Artigos</a>
+    <a href="#/curriculo">Currículo</a>
+    <a href="#/editor" id="nav-editor" hidden>Editor</a>
+    <a href="#/login" id="nav-login">Entrar</a>
+    <a href="#" id="nav-logout" hidden>Sair</a>
+    <button id="theme" title="Alternar tema" aria-label="Alternar tema">◐</button>
+  </nav>
+</header>
+
+<main id="view" class="wrap"></main>
+
+<footer class="foot wrap">
+  <span id="foot-links"></span>
+  <span>© <span id="year"></span> Davi Menegazzi</span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/content.js"></script>
+<script src="js/store.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
