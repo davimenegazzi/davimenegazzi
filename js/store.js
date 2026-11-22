@@ -70,7 +70,7 @@
       }
       return read(LS.docs, [])
         .filter(d => (!kind || d.kind === kind) && (drafts || d.published))
-        .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+        .sort((a, b) => (b.published_at || b.updated_at).localeCompare(a.published_at || a.updated_at));
     },
 
     async get(id) {
@@ -91,6 +91,8 @@
       const all = read(LS.docs, []);
       if (!row.id) { row.id = uid(); row.created_at = row.updated_at; }
       const i = all.findIndex(d => d.id === row.id);
+      const prev = i >= 0 ? all[i] : {};
+      row.published_at = row.published ? (prev.published_at || row.updated_at) : (prev.published_at || null);
       if (i >= 0) all[i] = { ...all[i], ...row }; else all.push(row);
       write(LS.docs, all);
       return row;

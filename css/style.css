@@ -74,7 +74,9 @@ h2.rule .n{color:var(--mut);font-weight:400}
 .tags{display:flex;flex-wrap:wrap;gap:0 1.5ch}
 
 /* post */
-.post .meta{color:var(--mut);margin:-12px 0 24px}
+.post .meta{color:var(--mut);margin:-12px 0 28px;font-size:13px;line-height:1.8}
+.post .meta .tag{color:var(--fg);margin-right:.5ch}
+.post .meta .author{color:var(--fg);font-weight:700}
 .body{font-size:15px;line-height:1.8;overflow-wrap:break-word}
 .body h1,.body h2,.body h3{font-size:1.1em;font-weight:800;margin:1.6em 0 .4em;line-height:1.4}
 .body h1{font-size:1.3em}

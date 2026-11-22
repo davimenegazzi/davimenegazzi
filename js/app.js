@@ -20,7 +20,12 @@
   const tree = (items, render, empty) => `<ul class="tree">${items.length
     ? items.map((d, i) => `<li><span class="br" aria-hidden="true">${i === items.length - 1 ? "└── " : "├── "}</span><div class="it">${render(d)}</div></li>`).join("")
     : `<li><span class="br" aria-hidden="true">└── </span><div class="it mut">${esc(empty)}</div></li>`}</ul>`;
-  const postItem = (d) => `<span class="date">${fmt(d.updated_at)}</span><a href="#/post/${d.id}">${esc(d.title)}</a>`;
+  const when = (d) => d.published_at || d.updated_at;
+  const fmtFull = (iso) => {
+    const t = new Date(iso);
+    return fmt(iso) + " às " + t.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  };
+  const postItem = (d) => `<span class="date">${fmt(when(d))}</span><a href="#/post/${d.id}">${esc(d.title)}</a>`;
 
   const pages = {
     async home() {
@@ -55,7 +60,15 @@
       const d = await Store.get(id);
       if (!d || (!d.published && !Store.isAuthed())) return `${title("404")}<p class="mut">post não encontrado.</p><p><a href="#/">-> voltar ao início</a></p>`;
       return `<article class="post">${title(d.title)}
-        <div class="meta"><span class="tag">${d.kind === "noticia" ? "notícia" : "artigo"}</span> ${fmt(d.updated_at)}${d.published ? "" : " · rascunho"}</div>
+        <div class="meta">
+          <span class="tag">${d.kind === "noticia" ? "notícia" : "artigo"}</span>
+          por <span class="author">${esc(C.name)}</span> ·
+          ${d.published_at
+            ? `publicado em <time datetime="${esc(d.published_at)}">${fmtFull(d.published_at)}</time>`
+            : `rascunho, editado em <time datetime="${esc(d.updated_at)}">${fmtFull(d.updated_at)}</time>`}
+          ${d.published_at && new Date(d.updated_at) - new Date(d.published_at) > 3600e3
+            ? ` · <span class="edited">editado em <time datetime="${esc(d.updated_at)}">${fmtFull(d.updated_at)}</time></span>` : ""}
+        </div>
         <div class="body">${DOMPurify.sanitize(d.html)}</div>
         ${Store.isAuthed() ? `<p style="margin-top:2em"><a href="/editor/?id=${d.id}">-> editar</a></p>` : ""}</article>`;
     },

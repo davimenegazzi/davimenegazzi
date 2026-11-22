@@ -66,6 +66,7 @@ test("cria, lista, edita e apaga posts", async () => {
   const pub = await call(posts, { method: "POST", cookie, body: { kind: "artigo", title: " Publicado ", html: "<p>oi</p>", published: true } });
   assert.equal(pub.status, 201);
   assert.equal(pub.json.title, "Publicado");
+  assert.ok(pub.json.published_at, "publicado ganha data de publicação");
   const draft = await call(posts, { method: "POST", cookie, body: { kind: "noticia", title: "Rascunho", html: "", published: false } });
 
   // visitante vê só o publicado, sem o corpo na lista
@@ -80,11 +81,16 @@ test("cria, lista, edita e apaga posts", async () => {
   const news = await call(posts, { url: "/api/posts?kind=noticia&drafts=1", cookie });
   assert.deepEqual(news.json.map(p => p.title), ["Rascunho"]);
 
-  // edita
+  assert.equal(draft.json.published_at, null, "rascunho não tem data de publicação");
+
+  // edita (publica o rascunho)
   const ed = await call(posts, { method: "POST", cookie, body: { id: draft.json.id, kind: "noticia", title: "Agora publicada", html: "<p>x</p>", published: true } });
   assert.equal(ed.status, 200);
+  assert.ok(ed.json.published_at, "ao publicar, ganha data");
+  const firstPub = ed.json.published_at;
   const withDoc = await call(posts, { method: "POST", cookie, body: { id: draft.json.id, kind: "noticia", title: "Agora publicada", html: "<p>x</p>", doc: { type: "doc", content: [{ type: "paragraph" }] }, published: true } });
   assert.deepEqual(withDoc.json.doc, { type: "doc", content: [{ type: "paragraph" }] });
+  assert.equal(new Date(withDoc.json.published_at).getTime(), new Date(firstPub).getTime(), "editar não muda a data de publicação");
   assert.equal((await call(posts, { url: "/api/posts?kind=noticia" })).json[0].title, "Agora publicada");
 
   // apaga

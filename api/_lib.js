@@ -76,6 +76,9 @@ export function ensureSchema() {
     await sql`create index if not exists posts_kind_updated on posts (kind, updated_at desc)`;
     // documento no formato do editor (JSON do Tiptap); o html continua sendo o que o site mostra
     await sql`alter table posts add column if not exists doc jsonb`;
+    // momento da primeira publicação; posts publicados antes desta coluna usam a última edição
+    await sql`alter table posts add column if not exists published_at timestamptz`;
+    await sql`update posts set published_at = updated_at where published and published_at is null`;
   })().catch((e) => { ready = null; throw e; });
   return ready;
 }
