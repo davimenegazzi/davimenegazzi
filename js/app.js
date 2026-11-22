@@ -30,52 +30,34 @@
   $("foot-links").innerHTML = C.links.map(l => `<a href="${esc(l.href)}">${esc(l.label.toLowerCase())}</a>`).join(" · ");
   const links = () => C.links.map(l => `<a class="brk" href="${esc(l.href)}">${esc(l.label.toLowerCase())}</a>`).join("");
 
-  // nome em arte de texto: fonte bitmap de 5 linhas, cada célula vira "#", com sombra ":" deslocada
-  const G = {
-    A: [".###.", "#...#", "#####", "#...#", "#...#"],
-    D: ["####.", "#...#", "#...#", "#...#", "####."],
-    E: ["#####", "#....", "####.", "#....", "#####"],
-    G: [".####", "#....", "#.###", "#...#", ".###."],
-    I: ["###", ".#.", ".#.", ".#.", "###"],
-    M: ["#...#", "##.##", "#.#.#", "#...#", "#...#"],
-    N: ["#...#", "##..#", "#.#.#", "#..##", "#...#"],
-    V: ["#...#", "#...#", "#...#", ".#.#.", "..#.."],
-    Z: ["#####", "...#.", "..#..", ".#...", "#####"]
-  };
-  function banner(name) {
-    const words = name.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "").split(/\s+/).filter(Boolean);
-    if (!words.length || !words.every(w => [...w].every(ch => G[ch]))) return null;
-    const out = []; let cols = 0;
-    for (const w of words) {
-      const grid = [0, 1, 2, 3, 4].map(r => [...w].map(ch => G[ch][r]).join("."));
-      const on = (r, c) => r >= 0 && r < grid.length && c >= 0 && c < grid[r].length && grid[r][c] === "#";
-      const H = grid.length + 1, W = grid[0].length + 1;
-      for (let r = 0; r < H; r++) {
-        let line = "";
-        for (let c = 0; c < W; c++) line += on(r, c) ? "#" : on(r - 1, c - 1) ? '<span class="sh">:</span>' : " ";
-        out.push(line.replace(/ +$/, ""));
-      }
-      cols = Math.max(cols, W);
-    }
-    return { html: out.join("\n"), cols };
-  }
+  // arte ASCII: ajusta o tamanho da fonte para a arte caber na largura disponível
   let ratio = 0.6;
   function measure() {
     const s = document.createElement("span");
-    s.style.cssText = "position:absolute;visibility:hidden;white-space:pre;font:700 100px var(--mono)";
+    s.style.cssText = "position:absolute;visibility:hidden;white-space:pre;font:400 100px var(--mono)";
     s.textContent = "0".repeat(10);
     document.body.appendChild(s);
     ratio = s.getBoundingClientRect().width / 1000 || 0.6;
     s.remove();
   }
-  function fitBanner() {
-    const b = $("banner"); if (!b) return;
-    const w = b.parentElement.clientWidth;
-    b.style.fontSize = Math.min(24, w / (+b.dataset.cols * ratio) - 0.05) + "px";
+  const cols = (t) => Math.max(...t.split("\n").map(l => l.length));
+  function fitArt() {
+    document.querySelectorAll(".art pre").forEach(pre => {
+      if (!pre.offsetParent) return;
+      const w = pre.parentElement.clientWidth;
+      pre.style.fontSize = Math.min(14, w / (+pre.dataset.cols * ratio) - 0.02) + "px";
+    });
   }
   measure();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); fitBanner(); });
-  window.addEventListener("resize", fitBanner);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); fitArt(); });
+  window.addEventListener("resize", fitArt);
+  const art = () => {
+    const A = window.ART; if (!A) return "";
+    return `<figure class="art" aria-label="Arte em ASCII de A criação de Adão, de Michelangelo">
+      <pre class="wide" data-cols="${cols(A.wide)}" aria-hidden="true">${esc(A.wide)}</pre>
+      <pre class="narrow" data-cols="${cols(A.narrow)}" aria-hidden="true">${esc(A.narrow)}</pre>
+      <figcaption>michelangelo, a criação de adão, c. 1512</figcaption></figure>`;
+  };
 
   // peças de texto
   const title = (t) => `<h1 class="ttl">${esc(t)}</h1><div class="ul" aria-hidden="true">${"=".repeat(Math.min([...String(t)].length, 64))}</div>`;
@@ -88,9 +70,9 @@
   const pages = {
     async home() {
       const [news, arts] = await Promise.all([Store.list("noticia"), Store.list("artigo")]);
-      const b = banner(C.name);
       return `
-      ${b ? `<pre class="banner" id="banner" data-cols="${b.cols}" role="img" aria-label="${esc(C.name)}">${b.html}</pre>` : title(C.name)}
+      ${art()}
+      <h1 class="name">${esc(C.name)}</h1>
       <p class="who">${esc(C.title)}</p>
       ${C.photo ? `<p><img class="photo" src="${esc(C.photo)}" alt="${esc(C.name)}"></p>` : ""}
       ${C.bio.map(p => `<p>${esc(p)}</p>`).join("")}
@@ -147,12 +129,11 @@
     const [, name = "", arg] = location.hash.replace(/^#/, "").split("/");
     const key = pages[name] ? name : "home";
     document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === (key === "home" ? "#/" : "#/" + key)));
-    $("path").textContent = key === "home" ? "~" : "~/" + key;
     $("wrap").classList.toggle("wide", key === "editor");
     try {
       view.innerHTML = await pages[key](arg);
     } catch (e) { view.innerHTML = `${title("erro")}<p class="err">${esc(e.message || e)}</p>`; }
-    fitBanner();
+    fitArt();
     if (key === "editor" && Store.isAuthed()) Editor.mount($("ed-root"), arg);
     const lf = $("lf");
     if (lf) lf.onsubmit = async (ev) => {
