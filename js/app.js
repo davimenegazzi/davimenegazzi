@@ -8,24 +8,6 @@
   const HR = "─".repeat(240);
   document.querySelectorAll(".hr").forEach(e => { e.textContent = HR; });
 
-  // tema
-  const root = document.documentElement;
-  const SKINS = [["light", "claro"], ["dark", "escuro"], ["paper", "bege"]];
-  const setSkin = (t) => {
-    if (!SKINS.some(x => x[0] === t)) t = "light";
-    root.dataset.skin = t;
-    $("theme").textContent = "tema: " + SKINS.find(x => x[0] === t)[1];
-    try { localStorage.setItem("dm.skin", t); } catch {}
-  };
-  let saved = null;
-  try { saved = localStorage.getItem("dm.skin"); } catch {}
-  if (!saved) { try { saved = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } catch { saved = "light"; } }
-  setSkin(saved);
-  $("theme").onclick = () => {
-    const i = SKINS.findIndex(x => x[0] === root.dataset.skin);
-    setSkin(SKINS[(i + 1) % SKINS.length][0]);
-  };
-
   $("year").textContent = new Date().getFullYear();
   $("foot-links").innerHTML = C.links.map(l => `<a href="${esc(l.href)}">${esc(l.label.toLowerCase())}</a>`).join(" · ");
   const links = () => C.links.map(l => `<a class="brk" href="${esc(l.href)}">${esc(l.label.toLowerCase())}</a>`).join("");

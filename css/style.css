@@ -1,14 +1,13 @@
-/* layout: uma coluna de ~84 caracteres, como um arquivo de texto aberto no terminal. Tudo em monoespaçada. */
-/* temas: light (claro), dark (escuro), paper (bege). Sem escolha salva, segue o sistema. */
+/* layout: uma coluna de ~84 caracteres, como um arquivo de texto. Tudo em monoespaçada. */
+/* tema: segue o modo claro ou escuro do navegador */
 :root{
   --bg:#f1f1ef;--fg:#151515;--mut:#6b6b67;--line:#b8b8b3;--panel:#e6e6e3;--sel-bg:#151515;--sel-fg:#f1f1ef;--err:#b42318;
   --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-skin]){--bg:#0d0e0d;--fg:#d8dbd4;--mut:#80847c;--line:#363932;--panel:#161815;--sel-bg:#d8dbd4;--sel-fg:#0d0e0d;--err:#f97066;color-scheme:dark}
+  :root:not([data-theme=light]){--bg:#0d0e0d;--fg:#d8dbd4;--mut:#80847c;--line:#363932;--panel:#161815;--sel-bg:#d8dbd4;--sel-fg:#0d0e0d;--err:#f97066;color-scheme:dark}
 }
-:root[data-skin=dark]{--bg:#0d0e0d;--fg:#d8dbd4;--mut:#80847c;--line:#363932;--panel:#161815;--sel-bg:#d8dbd4;--sel-fg:#0d0e0d;--err:#f97066;color-scheme:dark}
-:root[data-skin=paper]{--bg:#d3ccb8;--fg:#2c2a25;--mut:#736d5c;--line:#a09a85;--panel:#cac3ad;--sel-bg:#2c2a25;--sel-fg:#e4ddc8;--err:#9b1c1c;color-scheme:light}
+:root[data-theme=dark]{--bg:#0d0e0d;--fg:#d8dbd4;--mut:#80847c;--line:#363932;--panel:#161815;--sel-bg:#d8dbd4;--sel-fg:#0d0e0d;--err:#f97066;color-scheme:dark}
 
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -47,8 +46,6 @@ button.plain::before,button.plain::after{content:none}
 button:hover{background:var(--sel-bg);color:var(--sel-fg)}
 button.primary{font-weight:700}
 button[aria-pressed=true]{background:var(--sel-bg);color:var(--sel-fg)}
-#theme{color:var(--mut)}
-#theme:hover{color:var(--sel-fg)}
 
 /* arte ASCII: sai da coluna e ocupa até 1200px; a versão estreita entra no celular */
 html{overflow-x:clip}
