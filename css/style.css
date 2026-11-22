@@ -46,17 +46,6 @@ button.primary{font-weight:700}
 button[aria-pressed=true]{background:var(--sel-bg);color:var(--sel-fg)}
 
 html{overflow-x:clip}
-/* arte em pontilhado: sai da coluna; escala inteira (1x ou 2x) para os pontos ficarem nítidos */
-.art{margin:40px 0 0;position:relative;left:50%;transform:translateX(-50%);width:min(1200px,calc(100vw - 2 * max(16px,env(safe-area-inset-left,0px))))}
-.art img{display:block;width:600px;max-width:100%;height:auto;margin:0 auto;image-rendering:pixelated}
-.art .pic-escuro{display:none}
-.art .pic-escuro img{opacity:.9}
-@media (prefers-color-scheme: dark){:root:not([data-theme=light]) .art .pic-escuro{display:block}:root:not([data-theme=light]) .art .pic-claro{display:none}}
-:root[data-theme=dark] .art .pic-escuro{display:block}
-:root[data-theme=dark] .art .pic-claro{display:none}
-@media (min-width:1240px){.art img{width:1200px}}
-@media (max-width:640px){.art img{width:340px}}
-.art figcaption{color:var(--mut);font-size:11px;text-align:center;margin-top:12px}
 .name{font-size:clamp(26px,5vw,40px);line-height:1.15;font-weight:800;margin:40px 0 4px;letter-spacing:-.01em}
 .who{font-weight:700;margin-bottom:.8em}
 .links{display:flex;flex-wrap:wrap;gap:0 1.5ch;margin:18px 0 0}

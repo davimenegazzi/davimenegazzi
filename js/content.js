@@ -9,7 +9,7 @@ window.CONTENT = {
   ],
   links: [
     { label: "Currículo", href: "#/curriculo" },
-    { label: "E-mail", href: "mailto:davi.silva@sou.unijui.edu.br" },
+    { label: "E-mail", href: "mailto:contato@davimenegazzi.com" },
     { label: "GitHub", href: "https://github.com/davimenegazzi" }
   ],
   about: [

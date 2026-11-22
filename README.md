@@ -9,7 +9,7 @@ Fora da faculdade, sou cofundador da [Tráfego Pro](https://trafego.pro), uma ag
 
 ## Contato
 
-[LinkedIn](https://www.linkedin.com/in/davimenegazzi/) · [E-mail](mailto:davimenegazzi11@gmail.com)
+[LinkedIn](https://www.linkedin.com/in/davimenegazzi/) · [E-mail](mailto:contato@davimenegazzi.com)
 
 <!--
 Opcional: estatísticas do GitHub. Descomente se quiser.

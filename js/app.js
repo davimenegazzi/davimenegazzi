@@ -12,14 +12,6 @@
   $("foot-links").innerHTML = C.links.map(l => `<a href="${esc(l.href)}">${esc(l.label.toLowerCase())}</a>`).join(" · ");
   const links = () => C.links.map(l => `<a class="brk" href="${esc(l.href)}">${esc(l.label.toLowerCase())}</a>`).join("");
 
-  // mãos de "A criação de Adão" em pontilhado; uma versão por tema e uma menor para celular
-  const art = () => {
-    const alt = "As mãos de Adão e de Deus quase se tocando, em pontilhado, a partir do afresco de Michelangelo";
-    const pic = (t) => `<picture class="pic-${t}"><source media="(max-width: 640px)" srcset="assets/maos-${t}-p.png">
-      <img src="assets/maos-${t}.png" width="600" height="201" alt="${alt}"></picture>`;
-    return `<figure class="art">${pic("claro")}${pic("escuro")}<figcaption>michelangelo, a criação de adão, c. 1512</figcaption></figure>`;
-  };
-
   // peças de texto
   const title = (t) => `<h1 class="ttl">${esc(t)}</h1><div class="ul" aria-hidden="true">${"=".repeat(Math.min([...String(t)].length, 64))}</div>`;
   const rule = (t, n) => `<h2 class="rule"><span class="pre" aria-hidden="true">──</span><span>${esc(t)}${n != null ? ` <span class="n">(${pad(n)})</span>` : ""}</span><span class="fill" aria-hidden="true">${HR}</span></h2>`;
@@ -32,7 +24,6 @@
     async home() {
       const [news, arts] = await Promise.all([Store.list("noticia"), Store.list("artigo")]);
       return `
-      ${art()}
       <h1 class="name">${esc(C.name)}</h1>
       <p class="who">${esc(C.title)}</p>
       ${C.photo ? `<p><img class="photo" src="${esc(C.photo)}" alt="${esc(C.name)}"></p>` : ""}
