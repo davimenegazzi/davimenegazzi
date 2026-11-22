@@ -8,7 +8,7 @@ window.CONTENT = {
     "Este site reúne minhas notícias, artigos e currículo."
   ],
   links: [
-    { label: "Currículo", href: "#/curriculo" },
+    { label: "Currículo", href: "https://www.linkedin.com/in/davimenegazzi/" },
     { label: "E-mail", href: "mailto:contato@davimenegazzi.com" },
     { label: "GitHub", href: "https://github.com/davimenegazzi" }
   ],
@@ -25,6 +25,7 @@ window.CONTENT = {
       { when: "Em andamento", role: "Graduação", org: "UNIJUÍ", place: "Ijuí, RS", desc: "" }
     ],
     skills: ["JavaScript", "HTML/CSS", "Meta Ads", "Google Ads", "Análise de dados"],
+    linkedin: "https://www.linkedin.com/in/davimenegazzi/",
     pdf: "" // ex.: "assets/curriculo.pdf"
   }
 };

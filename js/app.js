@@ -9,8 +9,10 @@
   document.querySelectorAll(".hr").forEach(e => { e.textContent = HR; });
 
   $("year").textContent = new Date().getFullYear();
-  $("foot-links").innerHTML = C.links.map(l => `<a href="${esc(l.href)}">${esc(l.label.toLowerCase())}</a>`).join(" · ");
-  const links = () => C.links.map(l => `<a class="brk" href="${esc(l.href)}">${esc(l.label.toLowerCase())}</a>`).join("");
+  // links externos abrem em nova aba
+  const ext = (href) => /^https?:/.test(href) ? ' target="_blank" rel="noopener"' : "";
+  $("foot-links").innerHTML = C.links.map(l => `<a href="${esc(l.href)}"${ext(l.href)}>${esc(l.label.toLowerCase())}</a>`).join(" · ");
+  const links = () => C.links.map(l => `<a class="brk" href="${esc(l.href)}"${ext(l.href)}>${esc(l.label.toLowerCase())}</a>`).join("");
 
   // peças de texto
   const title = (t) => `<h1 class="ttl">${esc(t)}</h1><div class="ul" aria-hidden="true">${"=".repeat(Math.min([...String(t)].length, 64))}</div>`;
@@ -44,7 +46,7 @@
     async curriculo() {
       const job = (x) => `<span class="date">${esc(x.when)}</span><span><b>${esc(x.role)}</b> @ ${esc(x.org)}${x.place ? ", " + esc(x.place) : ""}</span>${x.desc ? `<span class="desc">${esc(x.desc)}</span>` : ""}`;
       return `${title("currículo")}
-        ${C.cv.pdf ? `<p><a class="brk" href="${esc(C.cv.pdf)}" target="_blank" rel="noopener">baixar pdf</a></p>` : ""}
+        ${C.cv.linkedin || C.cv.pdf ? `<div class="links">${C.cv.linkedin ? `<a class="brk" href="${esc(C.cv.linkedin)}" target="_blank" rel="noopener">ver no linkedin</a>` : ""}${C.cv.pdf ? `<a class="brk" href="${esc(C.cv.pdf)}" target="_blank" rel="noopener">baixar pdf</a>` : ""}</div>` : ""}
         ${rule("experiência")}${tree(C.cv.experience, job, "")}
         ${rule("formação")}${tree(C.cv.education, job, "")}
         ${rule("habilidades")}<div class="tags">${C.cv.skills.map(s => `<span class="tag">${esc(s.toLowerCase())}</span>`).join("")}</div>`;
