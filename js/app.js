@@ -62,8 +62,7 @@
     async login() {
       if (Store.isAuthed()) { location.hash = "#/editor"; return ""; }
       return `<form id="lf"><fieldset class="box"><legend>entrar</legend>
-        ${Store.cloud ? `<label for="lf-email">e-mail:</label><input id="lf-email" type="email" name="email" required autocomplete="username">`
-          : `<p class="mut" style="font-size:12px">modo local: na primeira vez, a senha digitada vira a sua senha neste navegador.</p>`}
+        ${Store.cloud ? "" : `<p class="mut" style="font-size:12px">modo local: na primeira vez, a senha digitada vira a sua senha neste navegador.</p>`}
         <label for="lf-pw">senha:</label><input id="lf-pw" type="password" name="pw" required autocomplete="current-password">
         <p class="err" id="le"></p><button class="primary">entrar</button></fieldset></form>`;
     },
@@ -93,7 +92,7 @@
     if (lf) lf.onsubmit = async (ev) => {
       ev.preventDefault();
       const f = new FormData(lf);
-      try { await Store.login(f.get("email"), f.get("pw")); location.hash = "#/editor"; }
+      try { await Store.login(f.get("pw")); location.hash = "#/editor"; }
       catch (e) { $("le").textContent = e.message; }
     };
     scrollTo(0, 0);

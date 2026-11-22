@@ -1,63 +1,72 @@
-// Camada de dados: Supabase quando configurado, senão localStorage.
+// Camada de dados. No site publicado na Vercel usa a API (/api/*, banco Neon).
+// Quando a API não responde (arquivo aberto direto, prévia), usa o localStorage deste navegador.
 (function () {
-  const cfg = window.CONFIG || {};
-  const cloud = !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && window.supabase);
-  const sb = cloud ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
   const LS = { docs: "dm.docs", pw: "dm.pw", sess: "dm.sess" };
   const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
   const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+  const sessGet = () => { try { return sessionStorage.getItem(LS.sess) === "1"; } catch { return false; } };
+  const sessSet = (on) => { try { on ? sessionStorage.setItem(LS.sess, "1") : sessionStorage.removeItem(LS.sess); } catch {} };
   const sha = async (s) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))]
     .map(b => b.toString(16).padStart(2, "0")).join("");
   const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
 
+  let mode = "local";
   let signedIn = false;
   const listeners = [];
   const emit = () => listeners.forEach(f => f(signedIn));
 
+  async function api(path, opts = {}) {
+    const init = { credentials: "same-origin", ...opts };
+    if (opts.body !== undefined) { init.body = JSON.stringify(opts.body); init.headers = { "Content-Type": "application/json" }; }
+    const r = await fetch(path, init);
+    let data = null;
+    try { data = await r.json(); } catch {}
+    if (!r.ok) { const e = new Error((data && data.error) || "Erro " + r.status); e.status = r.status; throw e; }
+    return data;
+  }
+
   const Store = {
-    cloud,
+    get cloud() { return mode === "api"; },
     onAuth(f) { listeners.push(f); },
     isAuthed: () => signedIn,
 
     async init() {
-      if (cloud) {
-        const { data } = await sb.auth.getSession();
-        signedIn = !!data.session;
-        sb.auth.onAuthStateChange((_e, s) => { signedIn = !!s; emit(); });
-      } else {
-        signedIn = sessionStorage.getItem(LS.sess) === "1";
-      }
+      try {
+        const r = await fetch("/api/auth", { credentials: "same-origin" });
+        if (r.ok && (r.headers.get("content-type") || "").includes("application/json")) {
+          const d = await r.json();
+          if (d.db) { mode = "api"; signedIn = !!d.authed; }   // sem banco configurado, segue no modo local
+        }
+      } catch {}
+      if (mode === "local") signedIn = sessGet();
       emit();
     },
 
-    async login(email, password) {
-      if (cloud) {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) throw new Error("E-mail ou senha inválidos.");
-        return;
+    async login(password) {
+      if (mode === "api") {
+        await api("/api/auth", { method: "POST", body: { password } });
+      } else {
+        const h = await sha(password);
+        const saved = read(LS.pw, null);
+        if (!saved) write(LS.pw, h);                 // primeira vez: define a senha local
+        else if (saved !== h) throw new Error("Senha incorreta.");
+        sessSet(true);
       }
-      const h = await sha(password);
-      const saved = read(LS.pw, null);
-      if (!saved) { write(LS.pw, h); }            // primeira vez: define a senha local
-      else if (saved !== h) throw new Error("Senha incorreta.");
-      sessionStorage.setItem(LS.sess, "1");
       signedIn = true; emit();
     },
 
     async logout() {
-      if (cloud) await sb.auth.signOut();
-      sessionStorage.removeItem(LS.sess);
+      if (mode === "api") { try { await api("/api/auth", { method: "DELETE" }); } catch {} }
+      sessSet(false);
       signedIn = false; emit();
     },
 
     async list(kind, { drafts = false } = {}) {
-      if (cloud) {
-        let q = sb.from("posts").select("id,kind,title,published,updated_at").order("updated_at", { ascending: false });
-        if (kind) q = q.eq("kind", kind);
-        if (!drafts) q = q.eq("published", true);
-        const { data, error } = await q;
-        if (error) throw error;
-        return data;
+      if (mode === "api") {
+        const p = new URLSearchParams();
+        if (kind) p.set("kind", kind);
+        if (drafts) p.set("drafts", "1");
+        return api("/api/posts?" + p);
       }
       return read(LS.docs, [])
         .filter(d => (!kind || d.kind === kind) && (drafts || d.published))
@@ -65,22 +74,20 @@
     },
 
     async get(id) {
-      if (cloud) {
-        const { data, error } = await sb.from("posts").select("*").eq("id", id).single();
-        if (error) throw error;
-        return data;
+      if (mode === "api") {
+        try { return await api("/api/posts?id=" + encodeURIComponent(id)); }
+        catch (e) { if (e.status === 404) return null; throw e; }
       }
       return read(LS.docs, []).find(d => d.id === id) || null;
     },
 
     async save(doc) {
-      const row = { ...doc, updated_at: new Date().toISOString() };
-      if (cloud) {
-        if (!row.id) delete row.id;
-        const { data, error } = await sb.from("posts").upsert(row).select().single();
-        if (error) throw error;
-        return data;
+      if (mode === "api") {
+        return api("/api/posts", { method: "POST", body: {
+          id: doc.id || null, kind: doc.kind, title: doc.title, html: doc.html, published: !!doc.published
+        } });
       }
+      const row = { ...doc, updated_at: new Date().toISOString() };
       const all = read(LS.docs, []);
       if (!row.id) { row.id = uid(); row.created_at = row.updated_at; }
       const i = all.findIndex(d => d.id === row.id);
@@ -90,7 +97,7 @@
     },
 
     async remove(id) {
-      if (cloud) { const { error } = await sb.from("posts").delete().eq("id", id); if (error) throw error; return; }
+      if (mode === "api") { await api("/api/posts?id=" + encodeURIComponent(id), { method: "DELETE" }); return; }
       write(LS.docs, read(LS.docs, []).filter(d => d.id !== id));
     }
   };
