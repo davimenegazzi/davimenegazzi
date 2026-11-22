@@ -28,12 +28,25 @@ a{color:inherit}
 .boot{display:grid;place-items:center;height:100vh;color:var(--mut)}
 .boot.err{color:var(--danger)}
 
-.app{display:grid;grid-template-columns:288px minmax(0,1fr);height:100vh;height:100dvh}
+.app{display:grid;grid-template-columns:288px minmax(0,1fr);height:100vh;height:100dvh;transition:grid-template-columns .2s ease}
+.app.collapsed{grid-template-columns:52px minmax(0,1fr)}
 
 /* ---------- lista à esquerda ---------- */
 .side{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;
   padding:max(16px,env(safe-area-inset-top,0px)) 12px max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
-.new{display:flex;align-items:center;justify-content:center;gap:1ch;width:100%;padding:11px 12px;background:var(--sel-bg);color:var(--sel-fg);
+.side-top{display:flex;gap:6px}
+.fold{flex:none;width:40px;border:1px solid var(--line);color:var(--mut);font-size:16px;transition:color .12s,border-color .12s,background .12s}
+.fold:hover{color:var(--fg);border-color:var(--fg)}
+.rail{display:none;flex-direction:column;align-items:center;gap:8px}
+.rail-btn{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);color:var(--mut);font-size:16px;transition:color .12s,border-color .12s,opacity .12s}
+.rail-btn:hover{color:var(--fg);border-color:var(--fg)}
+.rail-btn.solid{background:var(--sel-bg);color:var(--sel-fg);border-color:var(--sel-bg);font-weight:700}
+.rail-btn.solid:hover{opacity:.85;color:var(--sel-fg)}
+/* recolhida: só a faixa com abrir e criar */
+.app.collapsed .side{padding-left:8px;padding-right:8px;overflow:hidden}
+.app.collapsed .side>:not(.rail){display:none}
+.app.collapsed .rail{display:flex}
+.new{flex:1;display:flex;align-items:center;justify-content:center;gap:1ch;min-width:0;padding:11px 12px;background:var(--sel-bg);color:var(--sel-fg);
   font-weight:700;letter-spacing:.02em;transition:opacity .15s,transform .1s}
 .new:hover{opacity:.88}
 .new:active{transform:translateY(1px)}
@@ -157,7 +170,12 @@ a{color:inherit}
 /* ---------- celular ---------- */
 .scrim{display:none}
 @media (max-width:860px){
-  .app{grid-template-columns:1fr}
+  .app,.app.collapsed{grid-template-columns:1fr}
+  .fold{display:none}
+  .app.collapsed .side>:not(.rail){display:revert}
+  .app.collapsed .side>.side-top,.app.collapsed .side>.filters,.app.collapsed .side>.side-foot{display:flex}
+  .app.collapsed .side>.docs{display:flex}
+  .app.collapsed .rail{display:none}
   .side{position:fixed;inset:0 auto 0 0;width:min(320px,86vw);z-index:80;transform:translateX(-102%);transition:transform .22s ease;box-shadow:var(--shadow)}
   .side.open{transform:none}
   .scrim{display:block;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s}

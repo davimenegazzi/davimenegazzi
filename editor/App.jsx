@@ -22,6 +22,11 @@ export default function App() {
   const [status, setStatus] = useState("");
   const [filter, setFilter] = useState("todos");
   const [drawer, setDrawer] = useState(false);   // lista no celular
+  const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem("dm.side") === "0"; } catch { return false; } });
+  const toggleSide = useCallback(() => setCollapsed((c) => {
+    try { localStorage.setItem("dm.side", c ? "1" : "0"); } catch {}
+    return !c;
+  }), []);
   const [armed, setArmed] = useState(false);     // confirmação de exclusão
   const [ask, setAsk] = useState(null);          // pedido de link/imagem
 
@@ -115,7 +120,11 @@ export default function App() {
 
   // ctrl/cmd+s salva na hora; fechar a aba com algo pendente avisa
   useEffect(() => {
-    const onKey = (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); flush(); } };
+    const onKey = (e) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      if (e.key.toLowerCase() === "s") { e.preventDefault(); flush(); }
+      if (e.key === "\\") { e.preventDefault(); toggleSide(); }
+    };
     const onLeave = (e) => { if (dirty.current) { flush(); e.preventDefault(); e.returnValue = ""; } };
     const onAsk = (e) => setAsk({ kind: e.detail.kind, value: e.detail.value || "" });
     window.addEventListener("keydown", onKey);
@@ -126,7 +135,7 @@ export default function App() {
       window.removeEventListener("beforeunload", onLeave);
       window.removeEventListener("editor:ask", onAsk);
     };
-  }, [flush]);
+  }, [flush, toggleSide]);
 
   // título cresce com o texto
   useEffect(() => {
@@ -154,11 +163,19 @@ export default function App() {
   const list = docs.filter((d) => filter === "todos" || d.kind === filter);
 
   return (
-    <div className="app">
+    <div className={"app" + (collapsed ? " collapsed" : "")}>
       <div className={"scrim" + (drawer ? " show" : "")} onClick={() => setDrawer(false)} />
 
       <aside className={"side" + (drawer ? " open" : "")} aria-label="Textos">
-        <button className="new" onClick={create}>+ criar novo</button>
+        <div className="rail">
+          <button className="rail-btn" onClick={toggleSide} title="Mostrar a lista (Ctrl+\)" aria-label="Mostrar a lista de textos">»</button>
+          <button className="rail-btn solid" onClick={create} title="Criar novo" aria-label="Criar novo">+</button>
+        </div>
+
+        <div className="side-top">
+          <button className="new" onClick={create}>+ criar novo</button>
+          <button className="fold" onClick={toggleSide} title="Recolher a lista (Ctrl+\)" aria-label="Recolher a lista de textos">«</button>
+        </div>
 
         <div className="filters" role="tablist">
           {FILTERS.map(([v, label]) => (
