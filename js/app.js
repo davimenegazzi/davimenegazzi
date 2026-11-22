@@ -128,7 +128,7 @@
   }
 
   function authUI(on) {
-    $("nav-editor").hidden = !on; $("nav-logout").hidden = !on; $("nav-login").hidden = on;
+    $("nav-editor").hidden = !on; $("nav-logout").hidden = !on;
   }
   $("nav-logout").onclick = async (e) => { e.preventDefault(); await Store.logout(); location.hash = "#/"; };
   Store.onAuth(authUI);
