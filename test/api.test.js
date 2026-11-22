@@ -83,6 +83,8 @@ test("cria, lista, edita e apaga posts", async () => {
   // edita
   const ed = await call(posts, { method: "POST", cookie, body: { id: draft.json.id, kind: "noticia", title: "Agora publicada", html: "<p>x</p>", published: true } });
   assert.equal(ed.status, 200);
+  const withDoc = await call(posts, { method: "POST", cookie, body: { id: draft.json.id, kind: "noticia", title: "Agora publicada", html: "<p>x</p>", doc: { type: "doc", content: [{ type: "paragraph" }] }, published: true } });
+  assert.deepEqual(withDoc.json.doc, { type: "doc", content: [{ type: "paragraph" }] });
   assert.equal((await call(posts, { url: "/api/posts?kind=noticia" })).json[0].title, "Agora publicada");
 
   // apaga

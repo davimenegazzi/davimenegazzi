@@ -1,6 +1,6 @@
 // GET ?id=        um post (rascunho só com sessão)
 // GET ?kind=&drafts=1   lista sem o corpo (rascunhos só com sessão)
-// POST {id?, kind, title, html, published}   cria ou atualiza (com sessão)
+// POST {id?, kind, title, html, doc?, published}   cria ou atualiza (com sessão)
 // DELETE ?id=     apaga (com sessão)
 import { wrap, send, httpError, readJson, query, db, ensureSchema, isAuthed } from "./_lib.js";
 
@@ -13,7 +13,10 @@ function validate(b) {
   if (typeof b.title !== "string" || b.title.length > 300) throw httpError(400, "Título deve ter até 300 caracteres.");
   if (typeof b.html !== "string" || b.html.length > 500_000) throw httpError(400, "Texto grande demais.");
   if (typeof b.published !== "boolean") throw httpError(400, "published deve ser verdadeiro ou falso.");
-  return { id: b.id || null, kind: b.kind, title: b.title.trim() || "sem título", html: b.html, published: b.published };
+  if (b.doc != null && (typeof b.doc !== "object" || Array.isArray(b.doc))) throw httpError(400, "doc inválido.");
+  const doc = b.doc == null ? null : JSON.stringify(b.doc);
+  if (doc && doc.length > 1_000_000) throw httpError(400, "Texto grande demais.");
+  return { id: b.id || null, kind: b.kind, title: b.title.trim() || "sem título", html: b.html, doc, published: b.published };
 }
 
 export default wrap(async (req, res) => {
@@ -49,14 +52,14 @@ export default wrap(async (req, res) => {
     if (p.id) {
       const [row] = await sql`
         update posts set kind = ${p.kind}, title = ${p.title}, html = ${p.html},
-          published = ${p.published}, updated_at = now()
+          doc = ${p.doc}::jsonb, published = ${p.published}, updated_at = now()
         where id = ${p.id} returning *`;
       if (!row) throw httpError(404, "Post não encontrado.");
       return send(res, 200, row);
     }
     const [row] = await sql`
-      insert into posts (kind, title, html, published)
-      values (${p.kind}, ${p.title}, ${p.html}, ${p.published}) returning *`;
+      insert into posts (kind, title, html, doc, published)
+      values (${p.kind}, ${p.title}, ${p.html}, ${p.doc}::jsonb, ${p.published}) returning *`;
     return send(res, 201, row);
   }
 

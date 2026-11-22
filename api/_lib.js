@@ -74,6 +74,8 @@ export function ensureSchema() {
       updated_at timestamptz not null default now()
     )`;
     await sql`create index if not exists posts_kind_updated on posts (kind, updated_at desc)`;
+    // documento no formato do editor (JSON do Tiptap); o html continua sendo o que o site mostra
+    await sql`alter table posts add column if not exists doc jsonb`;
   })().catch((e) => { ready = null; throw e; });
   return ready;
 }

@@ -84,7 +84,7 @@
     async save(doc) {
       if (mode === "api") {
         return api("/api/posts", { method: "POST", body: {
-          id: doc.id || null, kind: doc.kind, title: doc.title, html: doc.html, published: !!doc.published
+          id: doc.id || null, kind: doc.kind, title: doc.title, html: doc.html, doc: doc.doc ?? null, published: !!doc.published
         } });
       }
       const row = { ...doc, updated_at: new Date().toISOString() };

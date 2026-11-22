@@ -57,18 +57,18 @@
       return `<article class="post">${title(d.title)}
         <div class="meta"><span class="tag">${d.kind === "noticia" ? "notícia" : "artigo"}</span> ${fmt(d.updated_at)}${d.published ? "" : " · rascunho"}</div>
         <div class="body">${DOMPurify.sanitize(d.html)}</div>
-        ${Store.isAuthed() ? `<p style="margin-top:2em"><a href="#/editor/${d.id}">-> editar</a></p>` : ""}</article>`;
+        ${Store.isAuthed() ? `<p style="margin-top:2em"><a href="/editor/?id=${d.id}">-> editar</a></p>` : ""}</article>`;
     },
     async login() {
-      if (Store.isAuthed()) { location.hash = "#/editor"; return ""; }
+      if (Store.isAuthed()) { location.href = "/editor/"; return ""; }
       return `<form id="lf"><fieldset class="box"><legend>entrar</legend>
         ${Store.cloud ? "" : `<p class="mut" style="font-size:12px">modo local: na primeira vez, a senha digitada vira a sua senha neste navegador.</p>`}
         <label for="lf-pw">senha:</label><input id="lf-pw" type="password" name="pw" required autocomplete="current-password">
         <p class="err" id="le"></p><button class="primary">entrar</button></fieldset></form>`;
     },
     async editor() {
-      if (!Store.isAuthed()) { location.hash = "#/login"; return ""; }
-      return `<div id="ed-root"></div>`;
+      // o editor agora é uma página própria
+      location.href = "/editor/"; return "";
     }
   };
 
@@ -78,21 +78,18 @@
   }
 
   async function route() {
-    document.getElementById("ed-root")?.dispatchEvent(new Event("editor:unmount"));
     // aceita "#/login" e também "#login" (o link da prévia só repassa a segunda forma)
     const [name = "", arg] = location.hash.replace(/^#\/?/, "").split("/");
     const key = pages[name] ? name : "home";
     document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === (key === "home" ? "#/" : "#/" + key)));
-    $("wrap").classList.toggle("wide", key === "editor");
     try {
       view.innerHTML = await pages[key](arg);
     } catch (e) { view.innerHTML = `${title("erro")}<p class="err">${esc(e.message || e)}</p>`; }
-    if (key === "editor" && Store.isAuthed()) Editor.mount($("ed-root"), arg);
     const lf = $("lf");
     if (lf) lf.onsubmit = async (ev) => {
       ev.preventDefault();
       const f = new FormData(lf);
-      try { await Store.login(f.get("pw")); location.hash = "#/editor"; }
+      try { await Store.login(f.get("pw")); location.href = "/editor/"; }
       catch (e) { $("le").textContent = e.message; }
     };
     scrollTo(0, 0);
