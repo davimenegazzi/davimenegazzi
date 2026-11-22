@@ -9,7 +9,7 @@ Fora da faculdade, sou cofundador da [Tráfego Pro](https://trafego.pro), uma ag
 
 ## Contato
 
-[Portfólio](https://hybrid-copycat-craft.lovable.app) · [LinkedIn](https://linkedin.com/in/SEU-USUARIO) · [E-mail](mailto:SEU@EMAIL.COM)
+[LinkedIn](https://www.linkedin.com/in/davimenegazzi/) · [E-mail](mailto:davimenegazzi11@gmail.com)
 
 <!--
 Opcional: estatísticas do GitHub. Descomente se quiser.
