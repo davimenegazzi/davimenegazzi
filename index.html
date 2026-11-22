@@ -1,44 +1,41 @@
 <!doctype html>
-<html lang="pt-BR" data-theme="white">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Davi Menegazzi</title>
 <meta name="description" content="Portfólio, notícias e artigos de Davi Menegazzi.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="shell">
-  <aside class="side" id="side">
-    <a class="brand" href="#/">DM</a>
-    <div id="side-body"></div>
-  </aside>
+<div class="wrap" id="wrap">
+  <header class="top">
+    <div class="prompt">
+      <span><span class="ps1">davi@menegazzi</span>:<span id="path">~</span>$ <span class="cur" aria-hidden="true">_</span></span>
+      <button id="theme" class="t" aria-label="Alternar tema">tema</button>
+    </div>
+    <nav id="nav">
+      <a href="#/">início</a>
+      <a href="#/sobre">sobre</a>
+      <a href="#/noticias">notícias</a>
+      <a href="#/artigos">artigos</a>
+      <a href="#/curriculo">currículo</a>
+      <a href="#/editor" id="nav-editor" hidden>editor</a>
+      <a href="#/login" id="nav-login">entrar</a>
+      <a href="#" id="nav-logout" hidden>sair</a>
+    </nav>
+    <div class="hr" aria-hidden="true"></div>
+  </header>
 
-  <div class="col">
-    <header class="topbar">
-      <nav id="nav">
-        <a href="#/">Início</a>
-        <a href="#/sobre">Sobre mim</a>
-        <a href="#/noticias">Notícias</a>
-        <a href="#/artigos">Artigos</a>
-        <a href="#/curriculo">Currículo</a>
-        <a href="#/editor" id="nav-editor" hidden>Editor</a>
-        <a href="#/login" id="nav-login">Entrar</a>
-        <a href="#" id="nav-logout" hidden>Sair</a>
-      </nav>
-      <button id="theme" title="Alternar tema" aria-label="Alternar tema">TEMA: BRANCO</button>
-    </header>
+  <main id="view"></main>
 
-    <main id="view" class="page"></main>
-
-    <footer class="foot">
-      <span id="foot-links"></span>
-      <span>© <span id="year"></span> DAVI MENEGAZZI</span>
-    </footer>
-  </div>
+  <footer class="foot">
+    <div class="hr" aria-hidden="true"></div>
+    <div class="row"><span>© <span id="year"></span> davi menegazzi</span><span id="foot-links"></span></div>
+  </footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>

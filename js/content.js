@@ -13,8 +13,9 @@ window.CONTENT = {
     { label: "GitHub", href: "https://github.com/davimenegazzi" }
   ],
   about: [
-    "Escreva aqui uma apresentação mais longa: formação, interesses, projetos e o que você busca.",
-    "Edite o arquivo js/content.js para trocar este texto."
+    "Boa parte do código que escrevo nasceu de problemas do dia a dia: um relatório que dava trabalho demais, uma planilha que precisava se atualizar sozinha, uma reunião que ninguém lembrava de transcrever.",
+    "Também venho do design, então costumo cuidar de como as coisas ficam na tela, além de como funcionam.",
+    "Fora da faculdade, sou cofundador da Tráfego Pro, uma agência de tráfego pago. Agora estou mexendo na plataforma interna da agência, com dashboard de métricas e fechamentos dos clientes, e num bot de pré-venda para WhatsApp em cima da Evolution API."
   ],
   cv: {
     experience: [
