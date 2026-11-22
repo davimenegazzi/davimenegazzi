@@ -1,22 +1,19 @@
-# Davi Menegazzi — portfólio
+Estudo Engenharia de Software na Unijuí e sempre gostei de engenharia: entender como as coisas funcionam por dentro e depois construir a minha versão. Me interesso por eletrônica e robótica, pela física e química dos materiais por trás dos chips e pela parte da filosofia que pergunta como a gente sabe o que sabe.
 
-Site estático (HTML/CSS/JS, sem build) com Sobre mim, Notícias, Artigos, Currículo, login e um editor de texto em blocos.
+Boa parte do código daqui nasceu de problemas do dia a dia: um relatório que dava trabalho demais, uma planilha que precisava se atualizar sozinha, uma reunião que ninguém lembrava de transcrever. Também venho do design, então costumo cuidar de como as coisas ficam na tela, além de como funcionam.
 
-## Rodar local
-```bash
-npx serve .
-```
+Fora da faculdade, sou cofundador da [Tráfego Pro](https://trafego.pro), uma agência de tráfego pago.
 
-## Editar conteúdo
-- Textos, links e currículo: `js/content.js`
-- Notícias e artigos: faça login e use **Editor** (`#/editor`).
+## No que estou mexendo
 
-## Login e nuvem (Supabase)
-1. Crie um projeto no Supabase e rode `supabase/schema.sql`.
-2. Desative novos cadastros e crie seu usuário em Authentication > Users.
-3. Preencha `SUPABASE_URL` e `SUPABASE_ANON_KEY` em `js/config.js`.
+- Plataforma interna da Tráfego Pro, com dashboard de métricas e fechamentos dos clientes
+- Bot de pré-venda para WhatsApp em cima da Evolution API
 
-Sem configuração, o site usa **modo local**: documentos e senha ficam só no navegador (bom para testar, não para produção).
+## Contato
 
-## Publicar
-GitHub Pages: Settings > Pages > branch `main`, pasta `/`.
+[Portfólio](https://hybrid-copycat-craft.lovable.app) · [LinkedIn](https://linkedin.com/in/SEU-USUARIO) · [E-mail](mailto:SEU@EMAIL.COM)
+
+<!--
+Opcional: estatísticas do GitHub. Descomente se quiser.
+![Estatísticas](https://github-readme-stats.vercel.app/api?username=DaviMenegazzi&show_icons=true&hide_border=true)
+-->
