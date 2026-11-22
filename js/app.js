@@ -108,7 +108,8 @@
 
   async function route() {
     document.getElementById("ed-root")?.dispatchEvent(new Event("editor:unmount"));
-    const [, name = "", arg] = location.hash.replace(/^#/, "").split("/");
+    // aceita "#/login" e também "#login" (o link da prévia só repassa a segunda forma)
+    const [name = "", arg] = location.hash.replace(/^#\/?/, "").split("/");
     const key = pages[name] ? name : "home";
     document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === (key === "home" ? "#/" : "#/" + key)));
     $("wrap").classList.toggle("wide", key === "editor");
