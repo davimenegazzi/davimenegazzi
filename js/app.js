@@ -12,35 +12,6 @@
   $("foot-links").innerHTML = C.links.map(l => `<a href="${esc(l.href)}">${esc(l.label.toLowerCase())}</a>`).join(" · ");
   const links = () => C.links.map(l => `<a class="brk" href="${esc(l.href)}">${esc(l.label.toLowerCase())}</a>`).join("");
 
-  // arte ASCII: ajusta o tamanho da fonte para a arte caber na largura disponível
-  let ratio = 0.6;
-  function measure() {
-    const s = document.createElement("span");
-    s.style.cssText = "position:absolute;visibility:hidden;white-space:pre;font:400 100px var(--mono)";
-    s.textContent = "0".repeat(10);
-    document.body.appendChild(s);
-    ratio = s.getBoundingClientRect().width / 1000 || 0.6;
-    s.remove();
-  }
-  const cols = (t) => Math.max(...t.split("\n").map(l => l.length));
-  function fitArt() {
-    document.querySelectorAll(".art pre").forEach(pre => {
-      if (!pre.offsetParent) return;
-      const w = pre.parentElement.clientWidth;
-      pre.style.fontSize = Math.min(14, w / (+pre.dataset.cols * ratio) - 0.02) + "px";
-    });
-  }
-  measure();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); fitArt(); });
-  window.addEventListener("resize", fitArt);
-  const art = () => {
-    const A = window.ART; if (!A) return "";
-    return `<figure class="art" aria-label="Arte em ASCII de A criação de Adão, de Michelangelo">
-      <pre class="wide" data-cols="${cols(A.wide)}" aria-hidden="true">${esc(A.wide)}</pre>
-      <pre class="narrow" data-cols="${cols(A.narrow)}" aria-hidden="true">${esc(A.narrow)}</pre>
-      <figcaption>michelangelo, a criação de adão, c. 1512</figcaption></figure>`;
-  };
-
   // peças de texto
   const title = (t) => `<h1 class="ttl">${esc(t)}</h1><div class="ul" aria-hidden="true">${"=".repeat(Math.min([...String(t)].length, 64))}</div>`;
   const rule = (t, n) => `<h2 class="rule"><span class="pre" aria-hidden="true">──</span><span>${esc(t)}${n != null ? ` <span class="n">(${pad(n)})</span>` : ""}</span><span class="fill" aria-hidden="true">${HR}</span></h2>`;
@@ -53,7 +24,6 @@
     async home() {
       const [news, arts] = await Promise.all([Store.list("noticia"), Store.list("artigo")]);
       return `
-      ${art()}
       <h1 class="name">${esc(C.name)}</h1>
       <p class="who">${esc(C.title)}</p>
       ${C.photo ? `<p><img class="photo" src="${esc(C.photo)}" alt="${esc(C.name)}"></p>` : ""}
@@ -116,7 +86,6 @@
     try {
       view.innerHTML = await pages[key](arg);
     } catch (e) { view.innerHTML = `${title("erro")}<p class="err">${esc(e.message || e)}</p>`; }
-    fitArt();
     if (key === "editor" && Store.isAuthed()) Editor.mount($("ed-root"), arg);
     const lf = $("lf");
     if (lf) lf.onsubmit = async (ev) => {

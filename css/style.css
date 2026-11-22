@@ -47,14 +47,8 @@ button:hover{background:var(--sel-bg);color:var(--sel-fg)}
 button.primary{font-weight:700}
 button[aria-pressed=true]{background:var(--sel-bg);color:var(--sel-fg)}
 
-/* arte ASCII: sai da coluna e ocupa até 1200px; a versão estreita entra no celular */
 html{overflow-x:clip}
-.art{margin:36px 0 0;position:relative;left:50%;transform:translateX(-50%);width:min(1200px,calc(100vw - 2 * max(16px,env(safe-area-inset-left,0px))))}
-.art pre{margin:0;font:400 10px/1 var(--mono);white-space:pre;overflow:hidden;user-select:none;letter-spacing:0}
-.art .narrow{display:none}
-.art figcaption{color:var(--mut);font-size:11px;text-align:right;margin-top:10px}
-@media (max-width:600px){.art .wide{display:none}.art .narrow{display:block}.art figcaption{text-align:left}}
-.name{font-size:clamp(26px,5vw,40px);line-height:1.15;font-weight:800;margin:36px 0 4px;letter-spacing:-.01em}
+.name{font-size:clamp(26px,5vw,40px);line-height:1.15;font-weight:800;margin:56px 0 4px;letter-spacing:-.01em}
 .who{font-weight:700;margin-bottom:.8em}
 .links{display:flex;flex-wrap:wrap;gap:0 1.5ch;margin:18px 0 0}
 
