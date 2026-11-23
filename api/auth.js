@@ -4,7 +4,10 @@ import { hasDb, setupHints, wrap, send, httpError, readJson, isAuthed, checkPass
 export default wrap(async (req, res) => {
   if (req.method === "GET") {
     const db = hasDb();
-    return send(res, 200, db ? { authed: isAuthed(req), db } : { authed: false, db, diagnostico: setupHints() });
+    const h = setupHints();
+    // só sim/não: diz se a senha e as imagens estão configuradas, sem expor nada
+    const config = { senha: h.admin_password, imagens: h.blob };
+    return send(res, 200, db ? { authed: isAuthed(req), db, config } : { authed: false, db, config, diagnostico: h });
   }
 
   if (req.method === "POST") {

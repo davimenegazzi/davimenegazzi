@@ -60,12 +60,21 @@ export function databaseUrl() {
 }
 export const hasDb = () => !!(sqlFn || databaseUrl());
 
+// token do Vercel Blob, com ou sem prefixo no nome da variável
+export function blobToken() {
+  const env = process.env;
+  if (env.BLOB_READ_WRITE_TOKEN) return env.BLOB_READ_WRITE_TOKEN;
+  const k = Object.keys(env).find((n) => /BLOB_READ_WRITE_TOKEN$/.test(n) && env[n])
+    || Object.keys(env).find((n) => /^vercel_blob_rw_/.test(String(env[n])));
+  return k ? env[k] : null;
+}
+
 // só nomes, nunca valores: ajuda a descobrir por que o banco não aparece
 export function setupHints() {
   return {
     variaveis_de_banco: Object.keys(process.env).filter((k) => /DATABASE|POSTGRES|NEON|(^|_)PG/i.test(k)).sort(),
     admin_password: !!process.env.ADMIN_PASSWORD,
-    blob: !!process.env.BLOB_READ_WRITE_TOKEN,
+    blob: !!blobToken(),
     ambiente: process.env.VERCEL_ENV || null
   };
 }

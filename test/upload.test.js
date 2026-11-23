@@ -16,6 +16,14 @@ async function call(handler, { method = "POST", url = "/", cookie = "", body } =
 }
 const tokenRequest = (pathname) => ({ type: "blob.generate-client-token", payload: { pathname, clientPayload: null, multipart: false } });
 
+test("token com prefixo no nome também vale", async () => {
+  const { blobToken } = await import("../api/_lib.js");
+  delete process.env.BLOB_READ_WRITE_TOKEN;
+  process.env.STORAGE_BLOB_READ_WRITE_TOKEN = "vercel_blob_rw_abc_def";
+  assert.equal(blobToken(), "vercel_blob_rw_abc_def");
+  delete process.env.STORAGE_BLOB_READ_WRITE_TOKEN;
+});
+
 test("sem Blob conectado, avisa", async () => {
   delete process.env.BLOB_READ_WRITE_TOKEN;
   const r = await call(upload, { body: tokenRequest("posts/foto.jpg") });
