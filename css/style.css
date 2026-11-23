@@ -89,7 +89,7 @@ h2.rule .n{color:var(--mut);font-weight:400}
 .body ul>li::before{content:"- ";margin-left:-2ch;color:var(--mut)}
 .body ol{padding-left:3ch}
 .body hr{border:0;border-top:1px dashed var(--line);margin:2em 0}
-.body img{max-width:100%;height:auto;filter:grayscale(1) contrast(1.1)}
+.body img{max-width:100%;height:auto;display:block;margin:1.4em 0}
 .body table{border-collapse:collapse;display:block;overflow-x:auto}
 .body td,.body th{border:1px solid var(--line);padding:2px 1ch}
 

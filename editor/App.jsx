@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   EditorRoot, EditorContent, EditorCommand, EditorCommandEmpty, EditorCommandList, EditorCommandItem,
-  EditorBubble, EditorBubbleItem, handleCommandNavigation, useEditor
+  EditorBubble, EditorBubbleItem, handleCommandNavigation, handleImageDrop, handleImagePaste, ImageResizer, useEditor
 } from "novel";
 import { extensions, suggestionItems } from "./extensions.js";
+import { uploadFn } from "./upload.js";
 
 const Store = window.Store;
 const KIND = { artigo: "artigo", noticia: "notícia" };
@@ -30,6 +31,8 @@ export default function App() {
   const [armed, setArmed] = useState(false);     // confirmação de exclusão
   const [ask, setAsk] = useState(null);          // pedido de link/imagem
 
+  const [localCount, setLocalCount] = useState(0); // textos presos neste navegador
+  const [moving, setMoving] = useState(false);
   const curRef = useRef(cur);
   const dirty = useRef(false);
   const timer = useRef(null);
@@ -102,6 +105,26 @@ export default function App() {
     create();
   };
 
+  // envia ao banco os textos escritos antes no modo local deste navegador
+  const sendLocal = async () => {
+    setMoving(true);
+    const done = [];
+    try {
+      for (const d of Store.localDocs()) {
+        await Store.save({ kind: d.kind === "noticia" ? "noticia" : "artigo", title: d.title || "", html: d.html || "", doc: d.doc ?? null, published: !!d.published });
+        done.push(d.id);
+      }
+      setStatus(done.length + (done.length === 1 ? " texto enviado ao banco" : " textos enviados ao banco"));
+    } catch (e) {
+      setStatus("parou no meio: " + e.message);
+    } finally {
+      Store.archiveLocal(done);
+      setLocalCount(Store.localDocs().length);
+      setMoving(false);
+      await refresh();
+    }
+  };
+
   const logout = async () => { await flush(); await Store.logout(); location.href = "../"; };
 
   // carga inicial e proteção da página
@@ -109,6 +132,7 @@ export default function App() {
     (async () => {
       await Store.init();
       if (Store.cloud && !Store.isAuthed()) { location.replace("../login/"); return; }
+      if (Store.cloud) setLocalCount(Store.localDocs().length);
       const list = await Store.list(null, { drafts: true });
       setDocs(list);
       // abre o texto pedido no link ou o mais recente
@@ -127,10 +151,13 @@ export default function App() {
     };
     const onLeave = (e) => { if (dirty.current) { flush(); e.preventDefault(); e.returnValue = ""; } };
     const onAsk = (e) => setAsk({ kind: e.detail.kind, value: e.detail.value || "" });
+    const onNotice = (e) => setStatus(e.detail);
     window.addEventListener("keydown", onKey);
     window.addEventListener("beforeunload", onLeave);
     window.addEventListener("editor:ask", onAsk);
+    window.addEventListener("editor:notice", onNotice);
     return () => {
+      window.removeEventListener("editor:notice", onNotice);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("beforeunload", onLeave);
       window.removeEventListener("editor:ask", onAsk);
@@ -213,6 +240,20 @@ export default function App() {
       <main className="main">
         <button className="drawer-btn" onClick={() => setDrawer(true)} aria-label="Abrir lista de textos">≡ textos</button>
 
+        {!Store.cloud && (
+          <div className="warn" role="alert">
+            {Store.apiWithoutDb
+              ? <>o banco não está conectado no site. o que você escrever aqui fica <b>só neste navegador</b> e não aparece em outro computador nem para os visitantes.</>
+              : <>modo local: o que você escrever aqui fica <b>só neste navegador</b>.</>}
+          </div>
+        )}
+        {Store.cloud && localCount > 0 && (
+          <div className="warn info">
+            {localCount === 1 ? "1 texto escrito antes" : localCount + " textos escritos antes"} no modo local ainda estão só neste navegador.
+            <button onClick={sendLocal} disabled={moving}>{moving ? "enviando…" : "enviar para o banco"}</button>
+          </div>
+        )}
+
         <div className="page">
           <div className="meta">
             <div className="seg" role="group" aria-label="Tipo">
@@ -286,8 +327,11 @@ function DocEditor({ initial, onReady, onChange }) {
         extensions={extensions}
         className="ed"
         immediatelyRender={false}
+        slotAfter={<ImageResizer />}
         editorProps={{
           handleDOMEvents: { keydown: (_view, event) => handleCommandNavigation(event) },
+          handlePaste: (view, event) => handleImagePaste(view, event, uploadFn),
+          handleDrop: (view, event, _slice, moved) => handleImageDrop(view, event, moved, uploadFn),
           attributes: { class: "prose", spellcheck: "true" }
         }}
         onCreate={({ editor }) => onReady(editor)}

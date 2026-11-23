@@ -1,7 +1,8 @@
 import {
   StarterKit, Placeholder, TiptapLink, TiptapUnderline, TaskList, TaskItem, HorizontalRule,
-  TiptapImage, CustomKeymap, GlobalDragHandle, Command, renderItems, createSuggestionItems
+  UpdatedImage, UploadImagesPlugin, CustomKeymap, GlobalDragHandle, Command, renderItems, createSuggestionItems
 } from "novel";
+import { pickImage } from "./upload.js";
 
 // itens do menu "/"
 export const suggestionItems = createSuggestionItems([
@@ -25,7 +26,12 @@ export const suggestionItems = createSuggestionItems([
     command: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run() },
   { title: "Divisor", description: "Linha horizontal.", icon: "—", searchTerms: ["linha", "hr", "separador"],
     command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHorizontalRule().run() },
-  { title: "Imagem", description: "Imagem a partir de um link.", icon: "img", searchTerms: ["imagem", "foto", "image"],
+  { title: "Imagem", description: "Enviar do computador.", icon: "img", searchTerms: ["imagem", "foto", "image", "upload", "arquivo"],
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      pickImage(editor);
+    } },
+  { title: "Imagem por link", description: "Imagem que já está na internet.", icon: "url", searchTerms: ["imagem", "link", "url"],
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).run();
       window.dispatchEvent(new CustomEvent("editor:ask", { detail: { kind: "image" } }));
@@ -47,7 +53,9 @@ export const extensions = [
   TaskList,
   TaskItem.configure({ nested: true }),
   HorizontalRule,
-  TiptapImage.configure({ allowBase64: false }),
+  // imagem com largura ajustável e prévia enquanto envia
+  UpdatedImage.extend({ addProseMirrorPlugins: () => [UploadImagesPlugin({ imageClass: "uploading" })] })
+    .configure({ allowBase64: true }),
   CustomKeymap,
   GlobalDragHandle.configure({ dragHandleWidth: 20 }),
   Command.configure({ suggestion: { items: () => suggestionItems, render: renderItems } })

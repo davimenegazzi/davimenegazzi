@@ -11,6 +11,7 @@
   const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
 
   let mode = "local";
+  let apiNoDb = false; // o site tem a API, mas o banco não está conectado
   let signedIn = false;
   const listeners = [];
   const emit = () => listeners.forEach(f => f(signedIn));
@@ -27,6 +28,16 @@
 
   const Store = {
     get cloud() { return mode === "api"; },
+    get apiWithoutDb() { return apiNoDb; },
+
+    // textos guardados neste navegador (modo local)
+    localDocs() { return read(LS.docs, []); },
+    // depois de enviados ao banco, saem da lista local e ficam numa cópia de segurança
+    archiveLocal(ids) {
+      const all = read(LS.docs, []);
+      write(LS.docs + ".enviados", [...read(LS.docs + ".enviados", []), ...all.filter(d => ids.includes(d.id))]);
+      write(LS.docs, all.filter(d => !ids.includes(d.id)));
+    },
     onAuth(f) { listeners.push(f); },
     isAuthed: () => signedIn,
 
@@ -36,6 +47,7 @@
         if (r.ok && (r.headers.get("content-type") || "").includes("application/json")) {
           const d = await r.json();
           if (d.db) { mode = "api"; signedIn = !!d.authed; }   // sem banco configurado, segue no modo local
+          else apiNoDb = true;
         }
       } catch {}
       if (mode === "local") signedIn = sessGet();
