@@ -1,8 +1,11 @@
 // GET: diz se há sessão e se o banco está configurado. POST {password}: entra. DELETE: sai.
-import { hasDb, wrap, send, httpError, readJson, isAuthed, checkPassword, sessionCookie, clearedCookie } from "./_lib.js";
+import { hasDb, setupHints, wrap, send, httpError, readJson, isAuthed, checkPassword, sessionCookie, clearedCookie } from "./_lib.js";
 
 export default wrap(async (req, res) => {
-  if (req.method === "GET") return send(res, 200, { authed: isAuthed(req), db: hasDb() });
+  if (req.method === "GET") {
+    const db = hasDb();
+    return send(res, 200, db ? { authed: isAuthed(req), db } : { authed: false, db, diagnostico: setupHints() });
+  }
 
   if (req.method === "POST") {
     const { password } = await readJson(req);

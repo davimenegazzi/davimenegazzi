@@ -48,12 +48,32 @@ export function query(req) {
 
 // ---------- banco ----------
 let sqlFn = null;
-export const hasDb = () => !!(sqlFn || process.env.DATABASE_URL || process.env.POSTGRES_URL);
+// acha a conexão do Neon mesmo que a Vercel tenha criado as variáveis com prefixo
+// (ex.: STORAGE_DATABASE_URL) ou só com os nomes POSTGRES_*
+export function databaseUrl() {
+  const env = process.env;
+  const isPg = (v) => typeof v === "string" && /^postgres(ql)?:\/\//.test(v);
+  for (const k of ["DATABASE_URL", "POSTGRES_URL"]) if (isPg(env[k])) return env[k];
+  const names = Object.keys(env).filter((k) => isPg(env[k]));
+  const pick = (re) => names.find((k) => re.test(k));
+  return env[pick(/(^|_)DATABASE_URL$/) || pick(/(^|_)POSTGRES_URL$/) || names.find((n) => !/UNPOOLED|NON_POOLING/i.test(n)) || names[0]] || null;
+}
+export const hasDb = () => !!(sqlFn || databaseUrl());
+
+// só nomes, nunca valores: ajuda a descobrir por que o banco não aparece
+export function setupHints() {
+  return {
+    variaveis_de_banco: Object.keys(process.env).filter((k) => /DATABASE|POSTGRES|NEON|(^|_)PG/i.test(k)).sort(),
+    admin_password: !!process.env.ADMIN_PASSWORD,
+    blob: !!process.env.BLOB_READ_WRITE_TOKEN,
+    ambiente: process.env.VERCEL_ENV || null
+  };
+}
 export function setSql(fn) { sqlFn = fn; ready = null; } // usado nos testes
 
 export function db() {
   if (!sqlFn) {
-    const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    const url = databaseUrl();
     if (!url) throw httpError(500, "DATABASE_URL não está configurada na Vercel.");
     sqlFn = neon(url);
   }
