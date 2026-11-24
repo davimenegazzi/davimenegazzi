@@ -7,10 +7,13 @@ import { extensions, suggestionItems } from "./extensions.js";
 import { uploadFn } from "./upload.js";
 
 const Store = window.Store;
-const KIND = { artigo: "artigo", noticia: "notícia" };
-const FILTERS = [["todos", "todos"], ["artigo", "artigos"], ["noticia", "notícias"]];
+const KIND = { artigo: "artigo", noticia: "notícia", projeto: "projeto" };
+const FILTERS = [["todos", "todos"], ["artigo", "artigos"], ["noticia", "notícias"], ["projeto", "projetos"]];
 const key = () => Math.random().toString(36).slice(2);
-const blank = () => ({ _k: key(), id: null, kind: "artigo", title: "", html: "", doc: null, published: false });
+// campos usados só pelos projetos (badge na página inicial)
+const PROJECT = { pinned: false, link: "", opens: "pagina", look: "badge", summary: "", tags: "", ordem: 0 };
+const blank = () => ({ _k: key(), id: null, kind: "artigo", title: "", html: "", doc: null, published: false, ...PROJECT });
+const sitePath = (d) => "../#/" + (d.kind === "projeto" ? "projeto/" : "post/") + d.id;
 const fmt = (iso) => iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
   .replace(/\./g, "").replace(/ de /g, " ") : "";
 
@@ -78,7 +81,7 @@ export default function App() {
     await flush();
     const d = await Store.get(id);
     if (!d) { setStatus("esse texto não existe mais"); return; }
-    setDoc({ ...d, _k: key() });
+    setDoc({ ...PROJECT, ...d, _k: key() });
     setEdKey((k) => k + 1);
     setArmed(false); setAsk(null); setDrawer(false);
     setStatus("salvo");
@@ -111,7 +114,10 @@ export default function App() {
     const done = [];
     try {
       for (const d of Store.localDocs()) {
-        await Store.save({ kind: d.kind === "noticia" ? "noticia" : "artigo", title: d.title || "", html: d.html || "", doc: d.doc ?? null, published: !!d.published });
+        await Store.save({
+          ...PROJECT, ...d, id: null,
+          kind: KIND[d.kind] ? d.kind : "artigo", title: d.title || "", html: d.html || "", doc: d.doc ?? null, published: !!d.published
+        });
         done.push(d.id);
       }
       setStatus(done.length + (done.length === 1 ? " texto enviado ao banco" : " textos enviados ao banco"));
@@ -223,7 +229,8 @@ export default function App() {
               <button key={d.id} className={"doc" + (on ? " on" : "")} onClick={() => !on && open(d.id)}>
                 <span className="t">{(on ? cur.title : d.title).trim() || "sem título"}</span>
                 <span className="m">
-                  {KIND[d.kind]} · <span className={d.published ? "pub" : "draft"}>{d.published ? "publicado" : "rascunho"}</span> · {fmt(d.updated_at)}
+                  {KIND[d.kind] || "artigo"} · <span className={d.published ? "pub" : "draft"}>{d.published ? "publicado" : "rascunho"}</span>
+                  {(on ? cur.kind : d.kind) === "projeto" && (on ? cur.pinned : d.pinned) ? " · fixado" : ""} · {fmt(d.updated_at)}
                 </span>
               </button>
             );
@@ -266,7 +273,7 @@ export default function App() {
             </button>
             <span className="status" aria-live="polite">{status}</span>
             <span className="grow" />
-            {cur.id && cur.published && <a className="act" href={"../#/post/" + cur.id} target="_blank" rel="noopener">ver no site ↗</a>}
+            {cur.id && cur.published && <a className="act" href={sitePath(cur)} target="_blank" rel="noopener">ver no site ↗</a>}
             {cur.id && <button className={"act danger" + (armed ? " armed" : "")} onClick={remove}>{armed ? "confirmar exclusão" : "excluir"}</button>}
           </div>
 
@@ -285,6 +292,8 @@ export default function App() {
               ed.commands.focus("start");
             }}
           />
+
+          {cur.kind === "projeto" && <ProjectFields cur={cur} change={change} />}
 
           {ask && (
             <form className="ask" onSubmit={submitAsk}>
@@ -306,6 +315,79 @@ export default function App() {
         </div>
       </main>
     </div>
+  );
+}
+
+// como o projeto aparece no site: fixado, para onde o badge leva, badge ou cartão
+function ProjectFields({ cur, change }) {
+  const tags = cur.tags.split(",").map((t) => t.trim()).filter(Boolean);
+  const link = Store.cleanLink(cur.link);
+  const badLink = cur.link.trim() && !link;
+  const external = cur.opens === "link" && link;
+  // texto do campo ordem: deixa digitar "-" sem voltar para 0
+  const [ord, setOrd] = useState(String(cur.ordem));
+  useEffect(() => { setOrd(String(cur.ordem)); }, [cur._k]); // eslint-disable-line react-hooks/exhaustive-deps
+  const name = cur.title.trim() || "sem título";
+  return (
+    <section className="proj" aria-label="Projeto">
+      <div className="proj-row">
+        <span className="lbl">página inicial</span>
+        <button className={"toggle" + (cur.pinned ? " on" : "")} aria-pressed={cur.pinned} onClick={() => change({ pinned: !cur.pinned })}>
+          <span className="box">{cur.pinned ? "x" : " "}</span> fixado
+        </button>
+        <div className="seg" role="group" aria-label="Aparência">
+          {[["badge", "badge"], ["cartao", "cartão"]].map(([k, label]) => (
+            <button key={k} aria-pressed={cur.look === k} onClick={() => cur.look !== k && change({ look: k })}>{label}</button>
+          ))}
+        </div>
+        <label className="ord">ordem
+          <input type="number" step="1" min="-1000000" max="1000000" value={ord}
+            onChange={(e) => {
+              const v = e.target.value; setOrd(v);
+              const n = Number(v);
+              if (v.trim() !== "" && Number.isInteger(n) && Math.abs(n) <= 1e6) change({ ordem: n });
+            }}
+            onBlur={() => setOrd(String(cur.ordem))} />
+        </label>
+      </div>
+
+      <div className="proj-row">
+        <span className="lbl">ao clicar, abre</span>
+        <div className="seg" role="group" aria-label="Destino do badge">
+          {[["pagina", "esta página"], ["link", "o link"]].map(([k, label]) => (
+            <button key={k} aria-pressed={cur.opens === k} onClick={() => cur.opens !== k && change({ opens: k })}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      <label className="fld"><span className="lbl">link</span>
+        <input type="text" inputMode="url" placeholder="https://github.com/…" value={cur.link} maxLength={2000}
+          onChange={(e) => change({ link: e.target.value })} />
+      </label>
+      {badLink && <p className="hint bad">link inválido: use https://, http:// ou mailto:. enquanto isso, ele é salvo vazio.</p>}
+      {!badLink && cur.opens === "link" && !link && <p className="hint">sem link, o badge abre a página do projeto.</p>}
+      {cur.opens === "pagina" && link && <p className="hint">o link aparece como botão dentro da página do projeto.</p>}
+
+      <label className="fld"><span className="lbl">resumo</span>
+        <input type="text" placeholder="uma linha sobre o projeto" value={cur.summary} maxLength={300}
+          onChange={(e) => change({ summary: e.target.value })} />
+      </label>
+      <label className="fld"><span className="lbl">etiquetas</span>
+        <input type="text" placeholder="react, supabase, meta ads" value={cur.tags} maxLength={200}
+          onChange={(e) => change({ tags: e.target.value })} />
+      </label>
+
+      <div className="proj-prev" aria-label="Prévia na página inicial">
+        <span className="lbl">prévia</span>
+        {!cur.published || !cur.pinned
+          ? <span className="hint">{!cur.published ? "rascunho: não aparece no site." : "não fixado: aparece só em /projetos."}</span>
+          : cur.look === "badge"
+            ? <span className="pv-badge">{name}{external ? " ↗" : ""}</span>
+            : <span className="pv-card"><span className="pv-t">{name}{external ? " ↗" : ""}</span>
+                {tags.length > 0 && <span className="pv-m">{tags.join(" · ").toLowerCase()}</span>}
+                {cur.summary.trim() && <span className="pv-d">{cur.summary.trim()}</span>}</span>}
+      </div>
+    </section>
   );
 }
 

@@ -104,3 +104,54 @@ test("validação recusa dados inválidos", async () => {
   const r2 = await call(posts, { url: "/api/posts?id=nao-e-uuid" });
   assert.equal(r2.status, 404);
 });
+
+test("projetos: campos do badge, link e fixado", async () => {
+  const base = { kind: "projeto", title: "Bot de pré-venda", html: "<p>sobre</p>", published: true };
+  const p = await call(posts, { method: "POST", cookie, body: {
+    ...base, pinned: true, link: "github.com/davimenegazzi/bot", opens: "link", look: "cartao",
+    summary: " Atende leads no WhatsApp ", tags: "node, evolution api", ordem: 2
+  } });
+  assert.equal(p.status, 201);
+  assert.equal(p.json.link, "https://github.com/davimenegazzi/bot", "link sem esquema ganha https://");
+  assert.equal(p.json.summary, "Atende leads no WhatsApp");
+  assert.equal(p.json.pinned, true);
+  assert.equal(p.json.ordem, 2);
+  const port = await call(posts, { method: "POST", cookie, body: { ...base, published: false, link: "meusite.com:8080/demo" } });
+  assert.equal(port.json.link, "https://meusite.com:8080/demo", "host:porta não é esquema");
+  await call(posts, { method: "DELETE", url: "/api/posts?id=" + port.json.id, cookie });
+
+  // a lista pública traz o que o badge precisa, sem o corpo
+  const list = await call(posts, { url: "/api/posts?kind=projeto" });
+  assert.equal(list.json.length, 1);
+  assert.deepEqual(
+    (({ pinned, link, opens, look, summary, tags, ordem }) => ({ pinned, link, opens, look, summary, tags, ordem }))(list.json[0]),
+    { pinned: true, link: "https://github.com/davimenegazzi/bot", opens: "link", look: "cartao", summary: "Atende leads no WhatsApp", tags: "node, evolution api", ordem: 2 }
+  );
+  assert.equal(list.json[0].html, undefined);
+
+  // desafixa e passa a abrir a página do projeto
+  const ed = await call(posts, { method: "POST", cookie, body: { ...base, id: p.json.id, pinned: false, opens: "pagina", link: "" } });
+  assert.equal(ed.status, 200);
+  assert.equal(ed.json.pinned, false);
+  assert.equal(ed.json.opens, "pagina");
+});
+
+test("projetos: recusa link perigoso ou ausente", async () => {
+  const base = { kind: "projeto", title: "x", html: "", published: true };
+  for (const link of ["javascript:alert(1)", "data:text/html,oi", "https://", "https://exemplo.com/a b"]) {
+    const r = await call(posts, { method: "POST", cookie, body: { ...base, link } });
+    assert.equal(r.status, 400, link);
+  }
+  // link ainda vazio não impede o salvamento automático
+  assert.equal((await call(posts, { method: "POST", cookie, body: { ...base, opens: "link", link: "" } })).status, 201);
+  assert.equal((await call(posts, { method: "POST", cookie, body: { ...base, opens: "outro" } })).status, 400);
+  assert.equal((await call(posts, { method: "POST", cookie, body: { ...base, ordem: 1.5 } })).status, 400);
+});
+
+test("artigos ignoram campos de projeto", async () => {
+  const r = await call(posts, { method: "POST", cookie, body: { kind: "artigo", title: "a", html: "", published: false, pinned: true, link: "javascript:x" } });
+  assert.equal(r.status, 201);
+  assert.equal(r.json.pinned, false);
+  assert.equal(r.json.link, "");
+});
+

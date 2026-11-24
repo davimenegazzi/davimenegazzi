@@ -27,15 +27,35 @@
   };
   const postItem = (d) => `<span class="date">${fmt(when(d))}</span><a href="#/post/${d.id}">${esc(d.title)}</a>`;
 
+  // projetos: o badge leva para a página do projeto ou para um link externo
+  const KIND_LABEL = { noticia: "notícia", artigo: "artigo", projeto: "projeto" };
+  const safeLink = Store.cleanLink;
+  const projHref = (d) => (d.opens === "link" && safeLink(d.link)) || "#/projeto/" + d.id;
+  const projA = (d, cls = "") => {
+    const href = projHref(d), out = !href.startsWith("#");
+    return `<a${cls ? ` class="${cls}"` : ""} href="${esc(href)}"${ext(href)}>${esc(d.title)}${out ? ' <span class="out" aria-label="(link externo)">↗</span>' : ""}</a>`;
+  };
+  const tagsOf = (d) => String(d.tags || "").split(",").map(t => t.trim()).filter(Boolean);
+  const byOrder = (a, b) => (b.pinned - a.pinned) || ((a.ordem || 0) - (b.ordem || 0)) || String(when(b)).localeCompare(String(when(a)));
+  const projCard = (d) => `${projA(d)}${tagsOf(d).length ? `<span class="mut">${esc(tagsOf(d).join(" · ").toLowerCase())}</span>` : ""}${d.summary ? `<span class="desc">${esc(d.summary)}</span>` : ""}`;
+  const projBadges = (items) => items.length ? `<div class="badges">${items.map(d => projA(d, "badge")).join("")}</div>` : "";
+
   const pages = {
     async home() {
-      const [news, arts] = await Promise.all([Store.list("noticia"), Store.list("artigo")]);
+      const [news, arts, projs] = await Promise.all([Store.list("noticia"), Store.list("artigo"), Store.list("projeto")]);
+      const pinned = projs.filter(d => d.pinned).sort(byOrder);
+      const cards = pinned.filter(d => d.look === "cartao");
       return `
       <h1 class="name">${esc(C.name)}</h1>
       <p class="who">${esc(C.title)}</p>
       ${C.photo ? `<p><img class="photo" src="${esc(C.photo)}" alt="${esc(C.name)}"></p>` : ""}
       ${C.bio.map(p => `<p>${esc(p)}</p>`).join("")}
       <div class="links">${links()}</div>
+      ${projs.length ? `${rule("projetos", projs.length)}
+        ${projBadges(pinned.filter(d => d.look !== "cartao"))}
+        ${cards.length ? tree(cards, projCard, "") : ""}
+        ${pinned.length ? "" : `<p class="mut">nenhum projeto fixado</p>`}
+        ${projs.length > pinned.length ? `<a class="more" href="#/projetos">-> ver todos</a>` : ""}` : ""}
       ${rule("notícias", news.length)}
       ${tree(news.slice(0, 5), postItem, "nenhuma notícia publicada ainda")}
       ${news.length > 5 ? `<a class="more" href="#/noticias">-> ver todas</a>` : ""}
@@ -46,6 +66,11 @@
     async sobre() {
       return `${title("sobre mim")}${C.about.map(p => `<p>${esc(p)}</p>`).join("")}<div class="links">${links()}</div>`;
     },
+    async projetos() {
+      const docs = (await Store.list("projeto")).sort(byOrder);
+      return `${title("projetos")}${tree(docs, projCard, "nenhum projeto publicado ainda")}`;
+    },
+    async projeto(id) { return pages.post(id); },
     async noticias() { return listPage("noticia", "notícias", "nenhuma notícia publicada ainda"); },
     async artigos() { return listPage("artigo", "artigos", "nenhum artigo publicado ainda"); },
     async curriculo() {
@@ -61,7 +86,7 @@
       if (!d || (!d.published && !Store.isAuthed())) return `${title("404")}<p class="mut">post não encontrado.</p><p><a href="#/">-> voltar ao início</a></p>`;
       return `<article class="post">${title(d.title)}
         <div class="meta">
-          <span class="tag">${d.kind === "noticia" ? "notícia" : "artigo"}</span>
+          <span class="tag">${KIND_LABEL[d.kind] || "artigo"}</span>
           por <span class="author">${esc(C.name)}</span> ·
           ${d.published_at
             ? `publicado em <time datetime="${esc(d.published_at)}">${fmtFull(d.published_at)}</time>`
@@ -69,6 +94,11 @@
           ${d.published_at && new Date(d.updated_at) - new Date(d.published_at) > 3600e3
             ? ` · <span class="edited">editado em <time datetime="${esc(d.updated_at)}">${fmtFull(d.updated_at)}</time></span>` : ""}
         </div>
+        ${d.kind === "projeto" && (d.summary || tagsOf(d).length || safeLink(d.link)) ? `<div class="proj">
+          ${d.summary ? `<p>${esc(d.summary)}</p>` : ""}
+          ${tagsOf(d).length ? `<div class="tags">${tagsOf(d).map(t => `<span class="tag">${esc(t.toLowerCase())}</span>`).join("")}</div>` : ""}
+          ${safeLink(d.link) ? `<div class="links"><a class="brk" href="${esc(safeLink(d.link))}"${ext(safeLink(d.link))}>abrir projeto ↗</a></div>` : ""}
+        </div>` : ""}
         <div class="body">${DOMPurify.sanitize(d.html)}</div>
         ${Store.isAuthed() ? `<p style="margin-top:2em"><a href="/editor/?id=${d.id}">-> editar</a></p>` : ""}</article>`;
     },
@@ -94,7 +124,8 @@
     // aceita "#/login" e também "#login" (o link da prévia só repassa a segunda forma)
     const [name = "", arg] = location.hash.replace(/^#\/?/, "").split("/");
     const key = pages[name] ? name : "home";
-    document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === (key === "home" ? "#/" : "#/" + key)));
+    const navKey = key === "projeto" ? "projetos" : key;
+    document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === (navKey === "home" ? "#/" : "#/" + navKey)));
     try {
       view.innerHTML = await pages[key](arg);
     } catch (e) { view.innerHTML = `${title("erro")}<p class="err">${esc(e.message || e)}</p>`; }

@@ -73,6 +73,14 @@ h2.rule .n{color:var(--mut);font-weight:400}
 .tag::after{content:"]"}
 .tags{display:flex;flex-wrap:wrap;gap:0 1.5ch}
 
+/* projetos: badges fixados na página inicial */
+.badges{display:flex;flex-wrap:wrap;gap:8px 1ch;margin:10px 0 4px}
+.badge{display:inline-block;border:1px solid var(--fg);padding:1px 1ch;text-decoration:none;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.badge .out,.tree .out{color:var(--mut)}
+.badge:hover .out,.tree a:hover .out{color:inherit}
+.post .proj{margin:-12px 0 28px}
+.post .proj .links{margin-top:8px}
+
 /* post */
 .post .meta{color:var(--mut);margin:-12px 0 28px;font-size:13px;line-height:1.8}
 .post .meta .tag{color:var(--fg);margin-right:.5ch}

@@ -26,7 +26,17 @@
     return data;
   }
 
+  // mesma regra de api/posts.js: devolve o link pronto ou "" se não for http(s)/mailto
+  const cleanLink = (v) => {
+    let u = String(v ?? "").trim();
+    if (!u || u.length > 2000) return "";
+    if (!/^[a-z][a-z0-9+.-]*:(?!\d)/i.test(u)) u = "https://" + u.replace(/^\/+/, "");
+    return /^(https?:\/\/[^\s/]+|mailto:\S+@)/i.test(u) && !/\s/.test(u) ? u : "";
+  };
+  const clampInt = (v) => { const n = Math.trunc(Number(v)); return Number.isFinite(n) ? Math.max(-1e6, Math.min(1e6, n)) : 0; };
+
   const Store = {
+    cleanLink,
     get cloud() { return mode === "api"; },
     get apiWithoutDb() { return apiNoDb; },
 
@@ -96,7 +106,13 @@
     async save(doc) {
       if (mode === "api") {
         return api("/api/posts", { method: "POST", body: {
-          id: doc.id || null, kind: doc.kind, title: doc.title, html: doc.html, doc: doc.doc ?? null, published: !!doc.published
+          id: doc.id || null, kind: doc.kind, title: doc.title, html: doc.html, doc: doc.doc ?? null, published: !!doc.published,
+          ...(doc.kind === "projeto" ? {
+            // link incompleto ou inválido vai vazio: o resto do texto continua sendo salvo
+            pinned: !!doc.pinned, link: cleanLink(doc.link),
+            opens: doc.opens === "link" ? "link" : "pagina", look: doc.look === "cartao" ? "cartao" : "badge",
+            summary: String(doc.summary || "").slice(0, 300), tags: String(doc.tags || "").slice(0, 200), ordem: clampInt(doc.ordem)
+          } : {})
         } });
       }
       const row = { ...doc, updated_at: new Date().toISOString() };

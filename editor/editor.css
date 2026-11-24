@@ -51,7 +51,7 @@ a{color:inherit}
 .new:hover{opacity:.88}
 .new:active{transform:translateY(1px)}
 .filters{display:flex;gap:2px;margin:16px 0 8px;padding:0 2px}
-.filters button{flex:1;padding:5px 0;font-size:12px;color:var(--mut);border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
+.filters button{flex:1 1 auto;padding:5px 4px;font-size:12px;color:var(--mut);border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
 .filters button:hover{color:var(--fg)}
 .filters button.on{color:var(--fg);border-bottom-color:var(--fg)}
 .docs{flex:1;overflow-y:auto;min-height:0;margin:0 -4px;padding:4px;display:flex;flex-direction:column;gap:2px;scrollbar-width:thin}
@@ -107,6 +107,25 @@ a{color:inherit}
 .ask button:hover{color:var(--fg)}
 .ask button::before{content:"["}
 .ask button::after{content:"]"}
+
+/* ---------- campos do projeto ---------- */
+.proj{display:flex;flex-direction:column;gap:10px;margin:14px 0 18px;padding:14px 16px;border:1px solid var(--line);font-size:12px;color:var(--mut)}
+.proj-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.proj .lbl{min-width:13ch;color:var(--mut)}
+.proj .fld{display:flex;align-items:center;gap:14px}
+.proj input{flex:1;min-width:0;font:inherit;font-size:13px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:0;padding:5px 8px;outline:0}
+.proj input:focus{border-color:var(--fg)}
+.proj .ord{display:inline-flex;align-items:center;gap:8px}
+.proj .ord input{width:7ch;flex:none}
+.proj .hint{margin:-4px 0 0;color:var(--faint)}
+.proj .hint.bad{color:var(--danger)}
+.proj-row .hint,.proj-prev .hint{margin:0}
+.proj-prev{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;padding-top:10px;border-top:1px dashed var(--line)}
+.pv-badge{border:1px solid var(--fg);color:var(--fg);padding:1px 1ch;font-size:14px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.pv-card{display:flex;flex-wrap:wrap;column-gap:2ch;min-width:0;font-size:14px}
+.pv-t{color:var(--fg);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.pv-d{flex-basis:100%}
+@media (max-width:560px){.proj .fld{flex-direction:column;align-items:stretch;gap:4px}}
 
 /* ---------- texto (ProseMirror) ---------- */
 .ed{position:relative}

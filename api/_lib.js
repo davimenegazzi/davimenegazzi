@@ -95,7 +95,7 @@ export function ensureSchema() {
     const sql = db();
     await sql`create table if not exists posts (
       id uuid primary key default gen_random_uuid(),
-      kind text not null check (kind in ('artigo', 'noticia')),
+      kind text not null check (kind in ('artigo', 'noticia', 'projeto')),
       title text not null default '',
       html text not null default '',
       published boolean not null default false,
@@ -108,6 +108,26 @@ export function ensureSchema() {
     // momento da primeira publicação; posts publicados antes desta coluna usam a última edição
     await sql`alter table posts add column if not exists published_at timestamptz`;
     await sql`update posts set published_at = updated_at where published and published_at is null`;
+    // projetos: mesmos textos, com campos a mais para o badge da página inicial
+    await sql`do $$ begin
+      if exists (select 1 from pg_constraint where conname = 'posts_kind_check'
+                 and pg_get_constraintdef(oid) not like '%projeto%') then
+        alter table posts drop constraint if exists posts_kind_check;
+      end if;
+      if not exists (select 1 from pg_constraint where conname = 'posts_kind_check') then
+        begin
+          alter table posts add constraint posts_kind_check check (kind in ('artigo', 'noticia', 'projeto'));
+        exception when duplicate_object then null; -- outra instância criou ao mesmo tempo
+        end;
+      end if;
+    end $$`;
+    await sql`alter table posts add column if not exists pinned boolean not null default false`;
+    await sql`alter table posts add column if not exists link text not null default ''`;
+    await sql`alter table posts add column if not exists opens text not null default 'pagina'`;
+    await sql`alter table posts add column if not exists look text not null default 'badge'`;
+    await sql`alter table posts add column if not exists summary text not null default ''`;
+    await sql`alter table posts add column if not exists tags text not null default ''`;
+    await sql`alter table posts add column if not exists ordem integer not null default 0`;
   })().catch((e) => { ready = null; throw e; });
   return ready;
 }
