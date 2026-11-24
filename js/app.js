@@ -42,7 +42,7 @@
 
   const pages = {
     async home() {
-      const [news, arts, projs] = await Promise.all([Store.list("noticia"), Store.list("artigo"), Store.list("projeto")]);
+      const [arts, projs] = await Promise.all([Store.list("artigo"), Store.list("projeto")]);
       const pinned = projs.filter(d => d.pinned).sort(byOrder);
       const cards = pinned.filter(d => d.look === "cartao");
       return `
@@ -56,9 +56,6 @@
         ${cards.length ? tree(cards, projCard, "") : ""}
         ${pinned.length ? "" : `<p class="mut">nenhum projeto fixado</p>`}
         ${projs.length > pinned.length ? `<a class="more" href="#/projetos">-> ver todos</a>` : ""}` : ""}
-      ${rule("notícias", news.length)}
-      ${tree(news.slice(0, 5), postItem, "nenhuma notícia publicada ainda")}
-      ${news.length > 5 ? `<a class="more" href="#/noticias">-> ver todas</a>` : ""}
       ${rule("artigos", arts.length)}
       ${tree(arts.slice(0, 5), postItem, "nenhum artigo publicado ainda")}
       ${arts.length > 5 ? `<a class="more" href="#/artigos">-> ver todos</a>` : ""}`;
@@ -71,7 +68,6 @@
       return `${title("projetos")}${tree(docs, projCard, "nenhum projeto publicado ainda")}`;
     },
     async projeto(id) { return pages.post(id); },
-    async noticias() { return listPage("noticia", "notícias", "nenhuma notícia publicada ainda"); },
     async artigos() { return listPage("artigo", "artigos", "nenhum artigo publicado ainda"); },
     async curriculo() {
       const job = (x) => `<span class="date">${esc(x.when)}</span><span><b>${esc(x.role)}</b> @ ${esc(x.org)}${x.place ? ", " + esc(x.place) : ""}</span>${x.desc ? `<span class="desc">${esc(x.desc)}</span>` : ""}`;

@@ -5,7 +5,7 @@ window.CONTENT = {
   photo: "", // ex.: "assets/foto.jpg"
   bio: [
     "Olá! Eu sou o Davi. Gosto de construir produtos na web, trabalhar com dados e marketing digital.",
-    "Este site reúne minhas notícias, artigos e currículo."
+    "Este site reúne meus projetos, artigos e currículo."
   ],
   links: [
     { label: "Currículo", href: "https://www.linkedin.com/in/davimenegazzi/" },
